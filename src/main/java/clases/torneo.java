@@ -18,6 +18,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import java.awt.image.BufferedImage;
+import java.sql.CallableStatement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,6 +49,73 @@ public class torneo {
     public String toString() {
         return this.nombre; // O el nombre que deseas mostrar en el JComboBox
     }
+    
+    public void iniciarTorneo(JTable tblParticipantes, JComboBox<torneo> comboAsignatura) {
+        DefaultTableModel model = (DefaultTableModel) tblParticipantes.getModel();
+        torneo asignaturaSeleccionada = (torneo) comboAsignatura.getSelectedItem();
+        int idasignatura = asignaturaSeleccionada.getId();
+
+        conexionbd objetoConexion = new conexionbd();
+        String sqlTorneo = "INSERT INTO torneo(idasignatura, idestadostorneos) VALUES (?, ?);";
+        int idTorneoGenerado = -1; 
+
+        try {
+            CallableStatement cs = objetoConexion.establecerConexion().prepareCall(sqlTorneo);
+            cs.setInt(1, idasignatura);
+            cs.setInt(2, 2);
+            cs.execute();
+
+            // Obtener las claves generadas (ID del torneo)
+            ResultSet rs = cs.getGeneratedKeys();
+            if (rs.next()) {
+                idTorneoGenerado = rs.getInt(1);  // Obtener el ID generado
+            }
+
+            // Recorrer cada fila de la tabla
+            for (int i = 0; i < model.getRowCount(); i++) {
+                String idParticipante = (String) model.getValueAt(i, 0);
+
+                String sqlConsulta = "Select idequipo from participantes where id="+idParticipante+"";
+                Statement st;
+                System.out.println("tipo participante "+idParticipante);
+                st = objetoConexion.establecerConexion().createStatement();
+                ResultSet rsConsulta = st.executeQuery(sqlConsulta);
+                int idtipoparticipante = 0;
+                int idequipo = 0;
+                while (rsConsulta.next()) {
+                    
+                   if(rsConsulta.getInt(1) == 1){
+                       idtipoparticipante = 1;
+                   }else{
+                       idtipoparticipante = 2;
+                       idequipo = rsConsulta.getInt(1);
+                   }
+                }
+
+                String sqlParticipantes = "INSERT INTO torneoparticipantes(idtorneo, idtipoparticipante, idparticipante, idequipo) VALUES (?, ?, ?, ?);";
+
+                CallableStatement csParticipantes = objetoConexion.establecerConexion().prepareCall(sqlParticipantes);
+                csParticipantes.setInt(1, idTorneoGenerado);
+                csParticipantes.setInt(2, idtipoparticipante);
+                if (idtipoparticipante == 1) {
+                    csParticipantes.setString(3, idParticipante);
+                    csParticipantes.setNull(4, java.sql.Types.INTEGER);
+                } else {
+                    csParticipantes.setNull(3, java.sql.Types.INTEGER); 
+                    csParticipantes.setInt(4, idequipo);
+                }
+                csParticipantes.execute();
+            }
+
+            JOptionPane.showMessageDialog(null, "Se inició el torneo con éxito");
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error en la creación del torneo, error: " + e.toString());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error inesperado: " + e.toString());
+        }
+    }
+
     
     public void agregarParticipantes(JComboBox<torneo> comboParticipante, JComboBox<torneo> comboTipoTorneo, JTable tblParticipantes, DefaultTableModel modelo, JComboBox<torneo> comboColor) {
         torneo participanteSeleccionado = (torneo) comboParticipante.getSelectedItem();
@@ -110,7 +180,7 @@ public class torneo {
                 sql = "SELECT p.id, CONCAT(p.apellidos, ' ', p.nombres) AS participante, p.imagen " +
                       "FROM participantes p WHERE p.id = " + idParticipanteSeleccionado;
             } else if (idTipoTorneoSeleccionado.equals("Equipos")) {
-                sql = "SELECT e.id, e.equipo, p.id, p.apellidos, p.nombres, p.imagen " +
+                sql = "SELECT p.id, e.equipo, p.id, p.apellidos, p.nombres, p.imagen " +
                       "FROM equipos e " +
                       "JOIN participantes p ON e.id = p.idequipo " +
                       "WHERE e.id = " + idParticipanteSeleccionado;
@@ -124,9 +194,9 @@ public class torneo {
             try (PreparedStatement st = conexion.prepareStatement(sql)) {
                 ResultSet rs = st.executeQuery();
                 StringBuilder Color = new StringBuilder();
+                ArrayList<ImageIcon> imagenesParticipantes = new ArrayList<>();
                 if (idTipoTorneoSeleccionado.equals("Equipos")) {
                     StringBuilder equipoNombre = new StringBuilder();
-                    ArrayList<ImageIcon> imagenesParticipantes = new ArrayList<>();
                     int i = 1;
                     while (rs.next()) {
                         if (equipoNombre.length() == 0) {
@@ -164,7 +234,10 @@ public class torneo {
                         datos[0] = rs.getString(1);  // ID del participante
                         datos[1] = rs.getString(2);  // Nombre del participante
                         String rutaImagen = rs.getString(3);  // Ruta de la imagen
-                        datos[2] = cargarImagenDesdeRuta("src/main/resources/" + rutaImagen, 60, 60);
+                        imagenesParticipantes.add(cargarImagenDesdeRuta("src/main/resources/" + rutaImagen, 150, 150));
+                        if (!imagenesParticipantes.isEmpty()) {
+                            datos[2] = concatenarImagenes(imagenesParticipantes, 150, 150);
+                        }
                         Color.append("<html>");
                         Color.append("<div style='text-align:center; color:#" + representacionColorSeleccionado + "'>").append(nombreColorSeleccionado);
                         Color.append("</div>");
