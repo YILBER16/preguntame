@@ -5,18 +5,31 @@
 package interfaces;
 
 import botones.boton;
+import clases.conexionbd;
 import clases.torneo;
+import com.compudisenos.arduinoconexion.conexionarduino;
+import com.panamahitek.ArduinoException;
+import com.panamahitek.PanamaHitek_Arduino;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
@@ -28,6 +41,9 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
+import jssc.SerialPortEvent;
+import jssc.SerialPortEventListener;
+import jssc.SerialPortException;
 
 /**
  *
@@ -44,6 +60,22 @@ public class creartorneo extends javax.swing.JFrame {
     private int radius = 0;
     private static creartorneo instancia;
     private DefaultTableModel modeloParticipantes;
+    
+//    PanamaHitek_Arduino ino = new PanamaHitek_Arduino();
+//    SerialPortEventListener listen = new SerialPortEventListener() {
+//        @Override
+//        public void serialEvent(SerialPortEvent spe) {
+//            try {
+//                if(ino.isMessageAvailable()){
+//                    System.out.println(ino.printMessage());
+//                }
+//            } catch (SerialPortException ex) {
+//                Logger.getLogger(conexionarduino.class.getName()).log(Level.SEVERE, null, ex);
+//            } catch (ArduinoException ex) {
+//                Logger.getLogger(conexionarduino.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+//        }
+//    };
     
     public creartorneo() {
         initComponents();
@@ -77,6 +109,69 @@ public class creartorneo extends javax.swing.JFrame {
                 objetoCrearTorneo.llenarComboboxParticipantes("Participantes", idtipotorneo, idparticipantes);
             }
         });
+ 
+        btnGo.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {     
+                // Crear el JComboBox que será llenado con los datos de la base de datos
+                JComboBox<torneo> comboBoxAsignaturas = new JComboBox<>();
+                int elementosTabla = tablaparticipantes.getRowCount();
+                
+                if(elementosTabla>=2){
+                    // Realizar la consulta para obtener las asignaturas
+                    String sql = "SELECT id, asignatura FROM asignaturas";
+                    conexionbd con = new conexionbd();
+                    Connection conexion = con.establecerConexion();
+
+                    try (Statement st = conexion.createStatement(); 
+                         ResultSet rs = st.executeQuery(sql)) {
+
+                        // Agregar una opción inicial "Seleccione una opción"
+                        comboBoxAsignaturas.addItem(new torneo(0, "Seleccione una opción", null));
+
+                        // Llenar el JComboBox con las asignaturas de la base de datos
+                        while (rs.next()) {
+                            int id = rs.getInt("id");
+                            String nombre = rs.getString("asignatura");
+                            torneo asignatura = new torneo(id, nombre, null);
+                            comboBoxAsignaturas.addItem(asignatura);
+                        }
+                    } catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(null, "Error al cargar asignaturas: " + ex.toString());
+                        return;  // Si hay un error, detener la ejecución
+                    }
+
+                    // Mostrar el JOptionPane con el JComboBox lleno
+                    int opcion = JOptionPane.showConfirmDialog(
+                        null,  // El padre del JOptionPane, puede ser tu JFrame si lo necesitas
+                        comboBoxAsignaturas,
+                        "Seleccione una asignatura",
+                        JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.QUESTION_MESSAGE
+                    );
+
+                    // Verificar si se presionó OK
+                    if (opcion == JOptionPane.OK_OPTION) {
+                        torneo seleccion = (torneo) comboBoxAsignaturas.getSelectedItem();
+                        if (seleccion != null && seleccion.getId() != 0) {
+                            objetoCrearTorneo.iniciarTorneo(tablaparticipantes, comboBoxAsignaturas);
+                        } else {
+                            JOptionPane.showMessageDialog(null, "No seleccionaste una asignatura válida.");
+                        }
+                    }                      
+                }else{
+                    JOptionPane.showMessageDialog(null, "Por favor agregue minimo 2 participantes");
+                }
+            }
+        });
+
+//        try {
+//            ino.arduinoRX("COM6", 9600, listen);
+//        } catch (ArduinoException ex) {
+//            Logger.getLogger(conexionarduino.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (SerialPortException ex) {
+//            Logger.getLogger(conexionarduino.class.getName()).log(Level.SEVERE, null, ex);
+//        }
     }
 
     public JButton getBtnGuardar() {
@@ -105,7 +200,7 @@ public class creartorneo extends javax.swing.JFrame {
         jPanel2 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tablaparticipantes = new javax.swing.JTable();
-        btnModificar = new botones.boton();
+        btnGo = new botones.boton();
         btnEliminar = new botones.boton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
@@ -191,16 +286,16 @@ public class creartorneo extends javax.swing.JFrame {
 
         jPanel2.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(11, 66, 1098, 430));
 
-        btnModificar.setBackground(new java.awt.Color(0, 153, 0));
-        btnModificar.setForeground(new java.awt.Color(255, 255, 255));
-        btnModificar.setText("Iniciar torneo");
-        btnModificar.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
-        btnModificar.addActionListener(new java.awt.event.ActionListener() {
+        btnGo.setBackground(new java.awt.Color(0, 153, 0));
+        btnGo.setForeground(new java.awt.Color(255, 255, 255));
+        btnGo.setText("Iniciar torneo");
+        btnGo.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
+        btnGo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnModificarActionPerformed(evt);
+                btnGoActionPerformed(evt);
             }
         });
-        jPanel2.add(btnModificar, new org.netbeans.lib.awtextra.AbsoluteConstraints(430, 500, 300, 50));
+        jPanel2.add(btnGo, new org.netbeans.lib.awtextra.AbsoluteConstraints(430, 500, 300, 50));
 
         btnEliminar.setBackground(new java.awt.Color(255, 0, 0));
         btnEliminar.setForeground(new java.awt.Color(255, 255, 255));
@@ -239,9 +334,9 @@ public class creartorneo extends javax.swing.JFrame {
       
     }//GEN-LAST:event_idtipotorneoMouseClicked
 
-    private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnModificarActionPerformed
+    private void btnGoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGoActionPerformed
 
-    }//GEN-LAST:event_btnModificarActionPerformed
+    }//GEN-LAST:event_btnGoActionPerformed
 
     private void idtipotorneoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_idtipotorneoActionPerformed
         // TODO add your handling code here:
@@ -309,7 +404,7 @@ public class creartorneo extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private botones.boton btnEliminar;
-    private botones.boton btnModificar;
+    private botones.boton btnGo;
     private botones.boton btnagregar;
     private combo_suggestion.ComboSuggestionUI comboSuggestionUI1;
     private combo_suggestion.ComboBoxSuggestion idcolor;
