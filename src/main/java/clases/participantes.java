@@ -140,7 +140,7 @@ public class participantes {
         columnModel.getColumn(1).setPreferredWidth(100); // Ancho para la columna "Nombres"
         columnModel.getColumn(2).setPreferredWidth(100); // Ancho para la columna "Apellidos"
         columnModel.getColumn(3).setPreferredWidth(50);  // Ancho para la columna "Equipo"
-        columnModel.getColumn(4).setPreferredWidth(150); // Ancho para la columna "Imagen"
+        columnModel.getColumn(4).setPreferredWidth(200); // Ancho para la columna "Imagen"
 
         String sql = "select p.id, p.nombres, p.apellidos, e.equipo, p.imagen from participantes p join equipos e on(p.idequipo = e.id)";
         Object[] datos = new Object[5]; // Cambiado a Object[] para manejar la imagen
@@ -158,7 +158,7 @@ public class participantes {
 
                 // Obtener la ruta relativa de la imagen desde la base de datos
                 String rutaImagen = rs.getString(5);
-                datos[4] = cargarImagenDesdeRuta(rutaImagen, 60, 60); // Cargar la imagen desde la ruta y escalarla
+                datos[4] = cargarImagenDesdeRuta(rutaImagen, 100, 100); // Cargar la imagen desde la ruta y escalarla
 
                 modelo.addRow(datos);
             }

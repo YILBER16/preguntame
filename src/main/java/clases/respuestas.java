@@ -18,10 +18,19 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import clases.TipoRespuestas;
+import java.awt.Image;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
@@ -99,35 +108,43 @@ public class respuestas {
     
     // Método para cargar la tabla con las respuestas y el JComboBox dinámico
     private void cargarRespuestas(String idPregunta, JTable tablaRespuestas, JTable tablaPreguntas) {
-        String sql = "SELECT r.id, r.respuesta, r.idtiporespuesta, tr.tipo " +
+        String sql = "SELECT r.id, r.respuesta, r.idtiporespuesta, tr.tipo, r.imagen " +
                      "FROM respuestas r " +
                      "JOIN tiporespuesta tr ON r.idtiporespuesta = tr.id " +
                      "WHERE idpregunta = ?";
 
         conexionbd con = new conexionbd();
         Connection conexion = con.establecerConexion();
-        DefaultTableModel modelo = new DefaultTableModel();
-
+        DefaultTableModel modelo = new DefaultTableModel() {
+            @Override
+            public Class<?> getColumnClass(int column) {
+                if (column == 3) { // La columna de imágenes
+                    return ImageIcon.class;
+                }
+                return String.class;
+            }
+        };
         modelo.addColumn("id");
         modelo.addColumn("Respuesta");
         modelo.addColumn("Respuesta correcta");
+        modelo.addColumn("Imagen");
+        modelo.addColumn("Ruta imagen");
 
         try (PreparedStatement st = conexion.prepareStatement(sql)) {
             st.setString(1, idPregunta);
             ResultSet rs = st.executeQuery();
-
+            Object[] datos = new Object[5];
             // Agrega filas al modelo
             while (rs.next()) {
-                String id = rs.getString("id");
-                String respuesta = rs.getString("respuesta");
-                String nombreTipoRespuesta = rs.getString("tipo"); // Nombre del tipo de respuesta
-
-                modelo.addRow(new Object[] { id, respuesta, nombreTipoRespuesta });
+                datos[0] = rs.getString(1);
+                datos[1] = rs.getString(2);
+                datos[2] = rs.getString(4);
+                String rutaImagen = rs.getString(5);
+                datos[3] = cargarImagenDesdeRuta(rutaImagen, 60, 60);
+                datos[4] = rutaImagen;
+                modelo.addRow(datos);
             }
-
-            // Asigna el modelo a la tabla antes de modificar columnas
             tablaRespuestas.setModel(modelo);
-
             // Crear y cargar el JComboBox después de haber asignado el modelo
             JComboBox<TipoRespuestas> comboBoxTipoRespuesta = new JComboBox<>();
             cargarComboBoxTipoRespuesta(comboBoxTipoRespuesta); // Método que llena el JComboBox
@@ -140,6 +157,11 @@ public class respuestas {
             tablaRespuestas.getColumnModel().getColumn(0).setMinWidth(0);
             tablaRespuestas.getColumnModel().getColumn(0).setMaxWidth(0);
             tablaRespuestas.getColumnModel().getColumn(0).setPreferredWidth(0);
+            
+            tablaRespuestas.getColumnModel().getColumn(4).setMinWidth(0);
+            tablaRespuestas.getColumnModel().getColumn(4).setMaxWidth(0);
+            tablaRespuestas.getColumnModel().getColumn(4).setWidth(0);
+            tablaRespuestas.getColumnModel().getColumn(4).setPreferredWidth(0);
 
             // Permitir al usuario agregar nuevas respuestas en la tabla
             modelo.addRow(new Object[] {null, "", ""}); // Fila vacía para nueva respuesta
@@ -147,6 +169,51 @@ public class respuestas {
               // Aquí es donde colocas el código para configurar la tabla con el listener
             DefaultTableModel modeloTablaRespuestas = (DefaultTableModel) tablaRespuestas.getModel();
             configurarTablaRespuestasConActualizaciones(tablaRespuestas, modeloTablaRespuestas, tablaPreguntas);
+            
+            tablaRespuestas.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    int row = tablaRespuestas.rowAtPoint(e.getPoint());
+                    int col = tablaRespuestas.columnAtPoint(e.getPoint());
+                    
+                    if (col == 3 && e.getClickCount() == 1) { // Doble clic en la columna de imagen
+                        JFileChooser fileChooser = new JFileChooser();
+                        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                        fileChooser.setDialogTitle("Seleccionar imagen");
+                        int result = fileChooser.showOpenDialog(null);
+
+                        if (result == JFileChooser.APPROVE_OPTION) {
+                            File selectedFile = fileChooser.getSelectedFile();
+                            String rutaAbsolutaImagen = selectedFile.getAbsolutePath();
+
+                            // Obtener la ruta de la imagen actual que ya está cargada desde la columna oculta
+                            String rutaImagenAnterior = (String) tablaRespuestas.getValueAt(row, 4); // Columna 5 es la ruta de imagen
+                            System.out.println(rutaImagenAnterior);
+                            // Eliminar la imagen anterior si existe
+                            if (rutaImagenAnterior != null && !rutaImagenAnterior.isEmpty()) {
+                                File imagenAnterior = new File("src/main/resources"+rutaImagenAnterior);
+                                if (imagenAnterior.exists()) {
+                                    imagenAnterior.delete(); // Eliminar la imagen anterior
+                                }
+                            }
+
+                            // Copiar la nueva imagen a la carpeta de recursos y obtener la ruta relativa
+                            String rutaRelativa = copiarImagenARutaRelativa(rutaAbsolutaImagen);
+
+                            // Actualizar la tabla con la nueva imagen
+                            ImageIcon nuevaImagen = cargarImagenDesdeRuta(rutaRelativa, 60, 60);
+                            tablaRespuestas.setValueAt(nuevaImagen, row, col);
+
+                            // Actualizar la ruta de la imagen en la columna oculta
+                            tablaRespuestas.setValueAt(rutaRelativa, row, 4);
+
+                            // Actualizar la base de datos con la nueva ruta relativa
+                            String idRespuesta = tablaRespuestas.getValueAt(row, 0).toString();
+                            actualizarRegistroRespuestas(idRespuesta, "imagen", rutaRelativa);
+                        }
+                    }
+                }
+            });
             
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, "Error al cargar respuestas: " + e.toString());
@@ -182,7 +249,7 @@ public class respuestas {
             }
         }
         return null;
-    }
+    }  
     
     public void guardarNuevasRespuestas(JTable tablaRespuestas, JTable tablaPreguntas) {
         DefaultTableModel modelo = (DefaultTableModel) tablaRespuestas.getModel();
@@ -202,7 +269,7 @@ public class respuestas {
         }
 
         String selectSql = "SELECT COUNT(*) FROM respuestas WHERE idpregunta = ? AND respuesta = ?";
-        String insertSql = "INSERT INTO respuestas (idpregunta, respuesta, idtiporespuesta) VALUES (?, ?, ?)";
+        String insertSql = "INSERT INTO respuestas (idpregunta, respuesta, idtiporespuesta, imagen) VALUES (?, ?, ?, ?)";
         String sqlNRespuestasCorrectas = "SELECT COUNT(r.id) AS nrespuestascorrectas " +
                                          "FROM preguntas p JOIN respuestas r ON (r.idpregunta = p.id) " +
                                          "WHERE p.id = " + idPregunta + " AND r.idtiporespuesta = 1";
@@ -253,7 +320,7 @@ public class respuestas {
                 String idRespuesta = (String) modelo.getValueAt(i, 0);
                 String respuesta = (String) modelo.getValueAt(i, 1);
                 Object tipoRespuestaObj = modelo.getValueAt(i, 2);
-
+                String ruta = (String) modelo.getValueAt(i, 4);
                 TipoRespuestas tipoRespuestaSeleccionado = null;
 
                 // Convertir el valor de la columna a TipoRespuestas
@@ -275,6 +342,7 @@ public class respuestas {
                         insertStmt.setString(1, idPregunta);
                         insertStmt.setString(2, respuesta);
                         insertStmt.setInt(3, tipoRespuestaId);
+                        insertStmt.setString(4, ruta);
                         int filasAfectadas = insertStmt.executeUpdate();
                         if (filasAfectadas > 0) {
                             filasGuardadas++; // Incrementa el contador si se insertó una fila
@@ -296,8 +364,7 @@ public class respuestas {
             JOptionPane.showMessageDialog(null, "Error al guardar respuestas: " + e.toString());
         }
     }
-
-    
+ 
     public void eliminarRespuestaDesdeBaseDeDatos(String idRespuesta) {
             String sql = "DELETE FROM respuestas WHERE id = ?";
             conexionbd objetoConexion = new conexionbd();
@@ -389,4 +456,37 @@ public class respuestas {
         }
     }
 
+    private ImageIcon cargarImagenDesdeRuta(String rutaRelativa, int ancho, int alto) {
+         String rutaCompleta = "src/main/resources" + rutaRelativa; // Ruta completa basada en la ruta relativa
+         ImageIcon imageIcon = new ImageIcon(rutaCompleta);
+
+         // Escalar la imagen al tamaño deseado
+         Image imagen = imageIcon.getImage();
+         Image imagenEscalada = imagen.getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
+         return new ImageIcon(imagenEscalada);
+     }
+    
+    private String copiarImagenARutaRelativa(String rutaAbsolutaImagen) {
+        // Carpeta donde guardarás las imágenes en la carpeta de recursos
+        String carpetaDestino = "src/main/resources/respuestas/";
+
+        // Obtener el nombre del archivo de la imagen seleccionada
+        File archivoOrigen = new File(rutaAbsolutaImagen);
+        String nombreArchivo = archivoOrigen.getName();
+
+        // Ruta de destino en la carpeta de recursos
+        String rutaDestino = carpetaDestino + nombreArchivo;
+
+        // Copiar el archivo a la carpeta de recursos
+        try {
+            File archivoDestino = new File(rutaDestino);
+            Files.copy(archivoOrigen.toPath(), archivoDestino.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Error al copiar la imagen: " + e.getMessage());
+        }
+
+        // Devolver la ruta relativa para guardar en la base de datos
+        return "/respuestas/" + nombreArchivo;
+    }
+    
 }

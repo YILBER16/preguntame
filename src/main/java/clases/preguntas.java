@@ -1,31 +1,32 @@
 package clases;
 
-import combo_suggestion.ComboBoxSuggestion;
+import java.awt.Image;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
-import javax.swing.JTextField;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import textarea.TextArea;
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
 
 public class preguntas {
     int id;
@@ -33,6 +34,7 @@ public class preguntas {
     int idgrado;
     private String pregunta;
     private String asignatura;
+    private String rutaImagen;
 
     public preguntas() {
         
@@ -75,7 +77,7 @@ public class preguntas {
         return this.asignatura; // O el nombre que deseas mostrar en el JComboBox
     }
 
-    public void insertarPregunta(TextArea paraPregunta, JComboBox<preguntas> paraAsignatura, JComboBox<preguntas> paraGrado) {
+    public void insertarPregunta(TextArea paraPregunta, JComboBox<preguntas> paraAsignatura, JComboBox<preguntas> paraGrado, String rutaImagen) {
         preguntas asignaturaSeleccionada = (preguntas) paraAsignatura.getSelectedItem();
         int idAsignaturaSeleccionada = asignaturaSeleccionada.getId();
 
@@ -85,13 +87,16 @@ public class preguntas {
         if(!paraPregunta.getText().isEmpty() && idAsignaturaSeleccionada != 0 && idGradoSeleccionado != 0){
             setPregunta(paraPregunta.getText());
             conexionbd objetoConexion = new conexionbd();
-            String consulta = "insert into preguntas(pregunta, idasignatura, idgrado) values (?, ?, ?);";
+            String consulta = "insert into preguntas(pregunta, idasignatura, idgrado, imagen) values (?, ?, ?, ?);";
 
             try {
                 CallableStatement cs = objetoConexion.establecerConexion().prepareCall(consulta);
                 cs.setString(1, getPregunta());
                 cs.setInt(2, idAsignaturaSeleccionada);
                 cs.setInt(3, idGradoSeleccionado);
+                if(!rutaImagen.isEmpty() || rutaImagen != null || rutaImagen != ""){
+                  cs.setString(4, rutaImagen); // Guardar la ruta de la imagen
+                }
                 cs.execute();
 
                 paraPregunta.setText("");
@@ -110,8 +115,11 @@ public class preguntas {
         conexionbd objetoConexion = new conexionbd();
         DefaultTableModel modelo = new DefaultTableModel() {
             @Override
-            public boolean isCellEditable(int row, int column) {
-                return column != 0; // Solo permitir edición en columnas diferentes de "id"
+            public Class<?> getColumnClass(int column) {
+                if (column == 4) { // La columna de imágenes
+                    return ImageIcon.class;
+                }
+                return String.class;
             }
         };
 
@@ -122,15 +130,17 @@ public class preguntas {
         modelo.addColumn("Asignatura");
         modelo.addColumn("Grado");
         modelo.addColumn("Pregunta");
+        modelo.addColumn("Imagen");
+        modelo.addColumn("RutaImagen");
 
         paramTablaPreguntas.setModel(modelo);
 
         // Aquí se llena la tabla con los datos incluyendo los nombres de asignatura y grado
-        String sql = "select p.id, a.asignatura, g.grado, p.pregunta, p.idasignatura, p.idgrado " +
+        String sql = "select p.id, a.asignatura, g.grado, p.pregunta, p.imagen, p.idasignatura, p.idgrado " +
                      "from preguntas p " +
                      "join asignaturas a on (p.idasignatura = a.id) " +
                      "join grados g on (p.idgrado = g.id)";
-        String[] datos = new String[6];
+        Object[] datos = new Object[8];
         Statement st;
 
         try {
@@ -142,18 +152,28 @@ public class preguntas {
                 datos[1] = rs.getString(2);
                 datos[2] = rs.getString(3);
                 datos[3] = rs.getString(4);
-                datos[4] = rs.getString(5); // idasignatura
-                datos[5] = rs.getString(6); // idgrado
+                String rutaImagen = rs.getString(5);
+                datos[4] = cargarImagenDesdeRuta(rutaImagen, 60, 60);
+                datos[5] = rutaImagen;
+                
+                datos[6] = rs.getString(6); // idasignatura
+                datos[7] = rs.getString(7); // idgrado
 
                 modelo.addRow(datos);
             }
             paramTablaPreguntas.setModel(modelo);
 
             TableColumnModel columnModel = paramTablaPreguntas.getColumnModel();
-            columnModel.getColumn(0).setPreferredWidth(50);  // Columna 0, ID
+            columnModel.getColumn(0).setPreferredWidth(20);  // Columna 0, ID
             columnModel.getColumn(1).setPreferredWidth(200); // Columna 1, Asignatura
-            columnModel.getColumn(2).setPreferredWidth(100); // Columna 2, Grado
-            columnModel.getColumn(3).setPreferredWidth(450); // Columna 3, Pregunta
+            columnModel.getColumn(2).setPreferredWidth(50); // Columna 2, Grado
+            columnModel.getColumn(3).setPreferredWidth(300); // Columna 3, Pregunta
+            columnModel.getColumn(4).setPreferredWidth(300);
+            
+            paramTablaPreguntas.getColumnModel().getColumn(5).setMinWidth(0);
+            paramTablaPreguntas.getColumnModel().getColumn(5).setMaxWidth(0);
+            paramTablaPreguntas.getColumnModel().getColumn(5).setWidth(0);
+            paramTablaPreguntas.getColumnModel().getColumn(5).setPreferredWidth(0);
             // Asignar ComboBox como editor para las columnas de asignatura y grado
             JComboBox<String> comboAsignatura = new JComboBox<>();
             JComboBox<String> comboGrado = new JComboBox<>();
@@ -204,6 +224,52 @@ public class preguntas {
                     // No hacer nada si se cancela la edición
                 }
             });
+            
+            paramTablaPreguntas.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    int row = paramTablaPreguntas.rowAtPoint(e.getPoint());
+                    int col = paramTablaPreguntas.columnAtPoint(e.getPoint());
+
+                    if (col == 4 && e.getClickCount() == 1) { // Doble clic en la columna de imagen
+                        JFileChooser fileChooser = new JFileChooser();
+                        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                        fileChooser.setDialogTitle("Seleccionar imagen");
+                        int result = fileChooser.showOpenDialog(null);
+
+                        if (result == JFileChooser.APPROVE_OPTION) {
+                            File selectedFile = fileChooser.getSelectedFile();
+                            String rutaAbsolutaImagen = selectedFile.getAbsolutePath();
+
+                            // Obtener la ruta de la imagen actual que ya está cargada desde la columna oculta
+                            String rutaImagenAnterior = (String) paramTablaPreguntas.getValueAt(row, 5); // Columna 5 es la ruta de imagen
+                            System.out.println(rutaImagenAnterior);
+                            // Eliminar la imagen anterior si existe
+                            if (rutaImagenAnterior != null && !rutaImagenAnterior.isEmpty()) {
+                                File imagenAnterior = new File("src/main/resources"+rutaImagenAnterior);
+                                if (imagenAnterior.exists()) {
+                                    imagenAnterior.delete(); // Eliminar la imagen anterior
+                                }
+                            }
+
+                            // Copiar la nueva imagen a la carpeta de recursos y obtener la ruta relativa
+                            String rutaRelativa = copiarImagenARutaRelativa(rutaAbsolutaImagen);
+
+                            // Actualizar la tabla con la nueva imagen
+                            ImageIcon nuevaImagen = cargarImagenDesdeRuta(rutaRelativa, 60, 60);
+                            paramTablaPreguntas.setValueAt(nuevaImagen, row, col);
+
+                            // Actualizar la ruta de la imagen en la columna oculta
+                            paramTablaPreguntas.setValueAt(rutaRelativa, row, 5);
+
+                            // Actualizar la base de datos con la nueva ruta relativa
+                            String idPregunta = paramTablaPreguntas.getValueAt(row, 0).toString();
+                            actualizarRegistro(idPregunta, "imagen", rutaRelativa);
+                        }
+                    }
+                }
+            });
+
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "No se pudo mostrar los registros " + e.toString());
@@ -310,4 +376,45 @@ public class preguntas {
         }
         return -1;
     }
+    
+    private ImageIcon cargarImagenDesdeRuta(String rutaRelativa, int ancho, int alto) {
+         String rutaCompleta = "src/main/resources" + rutaRelativa; // Ruta completa basada en la ruta relativa
+         ImageIcon imageIcon = new ImageIcon(rutaCompleta);
+
+         // Escalar la imagen al tamaño deseado
+         Image imagen = imageIcon.getImage();
+         Image imagenEscalada = imagen.getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
+         return new ImageIcon(imagenEscalada);
+     }
+        // Método para cargar y mostrar la imagen en el JLabel
+    private void cargarImagenEnLabel(JLabel label, String rutaCompleta) {
+         ImageIcon imageIcon = new ImageIcon(rutaCompleta);
+         Image imagen = imageIcon.getImage();
+         Image imagenEscalada = imagen.getScaledInstance(label.getWidth(), label.getHeight(), Image.SCALE_SMOOTH);
+         label.setIcon(new ImageIcon(imagenEscalada));
+     }
+     
+    private String copiarImagenARutaRelativa(String rutaAbsolutaImagen) {
+        // Carpeta donde guardarás las imágenes en la carpeta de recursos
+        String carpetaDestino = "src/main/resources/preguntas/";
+
+        // Obtener el nombre del archivo de la imagen seleccionada
+        File archivoOrigen = new File(rutaAbsolutaImagen);
+        String nombreArchivo = archivoOrigen.getName();
+
+        // Ruta de destino en la carpeta de recursos
+        String rutaDestino = carpetaDestino + nombreArchivo;
+
+        // Copiar el archivo a la carpeta de recursos
+        try {
+            File archivoDestino = new File(rutaDestino);
+            Files.copy(archivoOrigen.toPath(), archivoDestino.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Error al copiar la imagen: " + e.getMessage());
+        }
+
+        // Devolver la ruta relativa para guardar en la base de datos
+        return "/preguntas/" + nombreArchivo;
+    }
+
 }

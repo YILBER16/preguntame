@@ -271,7 +271,7 @@ public class equipos extends javax.swing.JFrame {
         participantes objetoParticipantes = new participantes();
          byte[] imagenEnBytes = getImagen(Ruta);
         // Construir la ruta relativa
-        String rutaRelativa = "/fotos/" + new File(Ruta).getName();
+        String rutaRelativa = "/preguntas/" + new File(Ruta).getName();
         objetoParticipantes.insertarParticipantes(txtnombres, txtapellidos, idequipo, rutaRelativa);
         objetoParticipantes.mostrarParticipantes(tablaparticipantes);
     }//GEN-LAST:event_btnguardarActionPerformed

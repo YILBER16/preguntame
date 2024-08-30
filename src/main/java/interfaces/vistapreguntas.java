@@ -13,15 +13,25 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.RenderingHints;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import javax.swing.table.DefaultTableModel;
 
@@ -39,6 +49,7 @@ public class vistapreguntas extends javax.swing.JFrame {
     private Color borderColor;
     private int radius = 0;
     private static vistapreguntas instancia;
+    String Ruta = "";
     
     public vistapreguntas() {
         initComponents();
@@ -51,13 +62,13 @@ public class vistapreguntas extends javax.swing.JFrame {
         tablapreguntas.getTableHeader().setOpaque(false);
         tablapreguntas.getTableHeader().setBackground(new Color(32,136,203));
         tablapreguntas.getTableHeader().setForeground(new Color(255,255,255));
-        tablapreguntas.setRowHeight(25);
+        tablapreguntas.setRowHeight(100);
         
         tablarespuestas.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 18));
         tablarespuestas.getTableHeader().setOpaque(false);
         tablarespuestas.getTableHeader().setBackground(new Color(32,136,203));
         tablarespuestas.getTableHeader().setForeground(new Color(255,255,255));
-        tablarespuestas.setRowHeight(25);
+        tablarespuestas.setRowHeight(100);
     }
 
     public JButton getBtnGuardar() {
@@ -82,8 +93,11 @@ public class vistapreguntas extends javax.swing.JFrame {
         txtpregunta = new textarea.TextArea();
         idasignatura = new combo_suggestion.ComboBoxSuggestion();
         ASIGNATURA = new javax.swing.JLabel();
-        ASIGNATURA1 = new javax.swing.JLabel();
+        Imagen = new javax.swing.JLabel();
         idgrado = new combo_suggestion.ComboBoxSuggestion();
+        btnexaminar = new botones.boton();
+        ASIGNATURA2 = new javax.swing.JLabel();
+        lblImagen = new rojerusan.RSLabelImage();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tablarespuestas = new javax.swing.JTable();
@@ -106,7 +120,7 @@ public class vistapreguntas extends javax.swing.JFrame {
 
         jLabel1.setFont(new java.awt.Font("Questions", 1, 24)); // NOI18N
         jLabel1.setText("PREGUNTA");
-        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 140, 90, -1));
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 140, 90, -1));
 
         btnguardar.setBackground(new java.awt.Color(51, 153, 0));
         btnguardar.setForeground(new java.awt.Color(255, 255, 255));
@@ -139,21 +153,34 @@ public class vistapreguntas extends javax.swing.JFrame {
         txtpregunta.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         textAreaScroll1.setViewportView(txtpregunta);
 
-        jPanel1.add(textAreaScroll1, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 110, 1370, 80));
+        jPanel1.add(textAreaScroll1, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 110, 850, 80));
 
         idasignatura.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
-        jPanel1.add(idasignatura, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 50, 600, 40));
+        jPanel1.add(idasignatura, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 50, 400, 40));
 
         ASIGNATURA.setFont(new java.awt.Font("Questions", 1, 24)); // NOI18N
         ASIGNATURA.setText("ASIGNATURA");
         jPanel1.add(ASIGNATURA, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 60, 90, -1));
 
-        ASIGNATURA1.setFont(new java.awt.Font("Questions", 1, 24)); // NOI18N
-        ASIGNATURA1.setText("grado");
-        jPanel1.add(ASIGNATURA1, new org.netbeans.lib.awtextra.AbsoluteConstraints(800, 60, 50, -1));
+        Imagen.setFont(new java.awt.Font("Questions", 1, 24)); // NOI18N
+        Imagen.setText("Imagen");
+        jPanel1.add(Imagen, new org.netbeans.lib.awtextra.AbsoluteConstraints(1050, 60, 70, -1));
 
         idgrado.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
-        jPanel1.add(idgrado, new org.netbeans.lib.awtextra.AbsoluteConstraints(860, 50, 630, 40));
+        jPanel1.add(idgrado, new org.netbeans.lib.awtextra.AbsoluteConstraints(640, 50, 350, 40));
+
+        btnexaminar.setText("Examinar");
+        btnexaminar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnexaminarActionPerformed(evt);
+            }
+        });
+        jPanel1.add(btnexaminar, new org.netbeans.lib.awtextra.AbsoluteConstraints(1020, 140, 130, -1));
+
+        ASIGNATURA2.setFont(new java.awt.Font("Questions", 1, 24)); // NOI18N
+        ASIGNATURA2.setText("grado");
+        jPanel1.add(ASIGNATURA2, new org.netbeans.lib.awtextra.AbsoluteConstraints(560, 60, 50, -1));
+        jPanel1.add(lblImagen, new org.netbeans.lib.awtextra.AbsoluteConstraints(1200, 40, 260, 200));
 
         jPanel3.add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 1510, 270));
         jPanel1.getAccessibleContext().setAccessibleDescription("");
@@ -190,6 +217,11 @@ public class vistapreguntas extends javax.swing.JFrame {
         btnsaverespuesta.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 btnsaverespuestaMouseClicked(evt);
+            }
+        });
+        btnsaverespuesta.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnsaverespuestaActionPerformed(evt);
             }
         });
 
@@ -302,7 +334,10 @@ public class vistapreguntas extends javax.swing.JFrame {
 
     private void btnguardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnguardarActionPerformed
         preguntas objetoPreguntas = new preguntas();
-        objetoPreguntas.insertarPregunta(txtpregunta, idasignatura, idgrado);
+        byte[] imagenEnBytes = getImagen(Ruta);
+        // Construir la ruta relativa
+        String rutaRelativa = "/preguntas/" + new File(Ruta).getName();
+        objetoPreguntas.insertarPregunta(txtpregunta, idasignatura, idgrado, rutaRelativa);
         objetoPreguntas.mostrarPreguntas(tablapreguntas);
     }//GEN-LAST:event_btnguardarActionPerformed
 
@@ -349,6 +384,52 @@ public class vistapreguntas extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btndeleterespuestaActionPerformed
 
+    private void btnexaminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnexaminarActionPerformed
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter extensionFilter = new FileNameExtensionFilter("JPG, PNG & GIF", "jpg", "png", "gif");
+        fileChooser.setFileFilter(extensionFilter);
+
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File imagenArchivo = fileChooser.getSelectedFile();
+            Ruta = imagenArchivo.getAbsolutePath();
+
+            // Definir la ruta relativa
+            String rutaRelativa = "src/main/resources/preguntas/" + imagenArchivo.getName();
+            File destino = new File(rutaRelativa);
+
+            try {
+                // Copiar el archivo al directorio de destino
+                Files.copy(imagenArchivo.toPath(), destino.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+                // Cargar la imagen y mostrarla en el JLabel
+                ImageIcon imageIcon = new ImageIcon(destino.getAbsolutePath());
+                Image imagen = imageIcon.getImage(); // Convertir a Image
+                Image imagenEscalada = imagen.getScaledInstance(lblImagen.getWidth(), lblImagen.getHeight(), Image.SCALE_SMOOTH); // Escalar la imagen
+                imageIcon = new ImageIcon(imagenEscalada); // Convertir a ImageIcon
+
+                lblImagen.setIcon(imageIcon); // Establecer el icono en el JLabel
+            } catch (IOException ex) {
+                Logger.getLogger(vistapreguntas.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_btnexaminarActionPerformed
+
+    private void btnsaverespuestaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnsaverespuestaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnsaverespuestaActionPerformed
+
+    private byte[] getImagen(String Ruta) {
+        File imagen = new File(Ruta);
+        try {
+            byte[] icono = new byte[(int) imagen.length()];
+            InputStream input = new FileInputStream(imagen);
+            input.read(icono);
+            return icono;
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+    
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -392,10 +473,12 @@ public class vistapreguntas extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel ASIGNATURA;
-    private javax.swing.JLabel ASIGNATURA1;
+    private javax.swing.JLabel ASIGNATURA2;
+    private javax.swing.JLabel Imagen;
     private botones.boton btnEliminar;
     private botones.boton btnadd;
     private botones.boton btndeleterespuesta;
+    private botones.boton btnexaminar;
     private botones.boton btnguardar;
     private botones.boton btnsaverespuesta;
     private combo_suggestion.ComboBoxSuggestion idasignatura;
@@ -407,6 +490,7 @@ public class vistapreguntas extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private rojerusan.RSLabelImage lblImagen;
     private javax.swing.JTable tablapreguntas;
     private javax.swing.JTable tablarespuestas;
     private textarea.TextAreaScroll textAreaScroll1;

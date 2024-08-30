@@ -4,6 +4,7 @@
  */
 package clases;
 
+import interfaces.juegoencurso;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.sql.Connection;
@@ -108,6 +109,8 @@ public class torneo {
             }
 
             JOptionPane.showMessageDialog(null, "Se inició el torneo con éxito");
+            juegoencurso vistaJuego = new juegoencurso(idTorneoGenerado); // Pasar el ID del torneo si es necesario
+            vistaJuego.setVisible(true); // Mostrar la nueva ventana
 
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, "Error en la creación del torneo, error: " + e.toString());
