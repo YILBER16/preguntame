@@ -1,6 +1,7 @@
 package clases;
 
 import java.awt.Font;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.PreparedStatement;
@@ -9,6 +10,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -19,17 +21,20 @@ public class juegologica {
     
     // Referencias a los componentes existentes en tu interfaz
     private JLabel labelpreguntas;
-    private JLabel labelopciona, labelopcionb, labelopcionc, labelopciond;
+    private JLabel labelopciona, labelopcionb, labelopcionc, labelopciond, labelimagena, labelimagenb, labelimagenc, labelimagend;
     private JButton btnsiguiente;
     
-    public juegologica(JLabel labelpreguntas, JLabel labelopciona, JLabel labelopcionb, JLabel labelopcionc, JLabel labelopciond, JButton btnsiguiente, int idTorneo) {
+    public juegologica(JLabel labelpreguntas, JLabel labelopciona, JLabel labelopcionb, JLabel labelopcionc, JLabel labelopciond, JButton btnsiguiente, JLabel labelimagena, JLabel labelimagenb, JLabel labelimagenc, JLabel labelimagend, int idTorneo) {
         this.labelpreguntas = labelpreguntas;
         this.labelopciona = labelopciona;
         this.labelopcionb = labelopcionb;
         this.labelopcionc = labelopcionc;
         this.labelopciond = labelopciond;
         this.btnsiguiente = btnsiguiente;
-
+        this.labelimagena = labelimagena;
+        this.labelimagenb = labelimagenb;
+        this.labelimagenc = labelimagenc;
+        this.labelimagend = labelimagend;
         // Inicializar la lista de preguntas desde la base de datos
         listaPreguntas = cargarPreguntasDesdeBD(idTorneo);
 
@@ -56,7 +61,7 @@ public class juegologica {
                             + "WHERE pr.idtorneo = ? AND pr.idpregunta = p.id)";
 
         // Consulta para obtener las respuestas asociadas a una pregunta
-        String sqlRespuestas = "SELECT idpregunta, respuesta, idtiporespuesta "
+        String sqlRespuestas = "SELECT idpregunta, respuesta, idtiporespuesta, imagen "
                              + "FROM respuestas "
                              + "WHERE idpregunta = ?";
 
@@ -78,18 +83,27 @@ public class juegologica {
                 ResultSet rsRespuestas = psRespuestas.executeQuery();
 
                 List<String> opciones = new ArrayList<>();
+                String vimagen = "";
                 while (rsRespuestas.next()) {
-                    String respuesta = rsRespuestas.getString("respuesta");
+                    String respuesta;
+                    String vRespuesta = rsRespuestas.getString("respuesta");
+                    if(!vRespuesta.trim().isEmpty()){
+                        respuesta = rsRespuestas.getString("respuesta");
+                        vimagen = "0";
+                    }else{
+                        respuesta = rsRespuestas.getString("imagen");
+                        vimagen = "1";
+                    }
                     opciones.add(respuesta);
                 }
-
+                opciones.add(vimagen);
                 // Asegurarse de tener exactamente 4 opciones, llenando con opciones vacías si es necesario
                 while (opciones.size() < 4) {
                     opciones.add("");
                 }
 
                 // Crear el objeto Pregunta con las respuestas
-                Pregunta pregunta = new Pregunta(idPregunta, textoPregunta, opciones.get(0), opciones.get(1), opciones.get(2), opciones.get(3));
+                Pregunta pregunta = new Pregunta(idPregunta, textoPregunta, opciones.get(0), opciones.get(1), opciones.get(2), opciones.get(3), opciones.get(4));
                 preguntas.add(pregunta);
             }
 
@@ -119,14 +133,34 @@ public class juegologica {
             labelopcionc.setText(preguntaActual.getOpcionC());
             labelopciond.setText(preguntaActual.getOpcionD());
             ajustarTextoTitulo(labelpreguntas, preguntaActual.getTexto());
-            ajustarTextoLabel(labelopciona, preguntaActual.getOpcionA());
-            ajustarTextoLabel(labelopcionb, preguntaActual.getOpcionB());
-            ajustarTextoLabel(labelopcionc, preguntaActual.getOpcionC());
-            ajustarTextoLabel(labelopciond, preguntaActual.getOpcionD());
+            
+            labelimagena.setIcon(null);
+            labelimagenb.setIcon(null);
+            labelimagenc.setIcon(null);
+            labelimagend.setIcon(null);
+            System.out.println("clases.juegologica.mostrarSiguientePregunta()"+ preguntaActual.getVImagen());
+            if(preguntaActual.getVImagen().equals("0")) {
+                
+                ajustarTextoLabel(labelopciona, preguntaActual.getOpcionA());
+                ajustarTextoLabel(labelopcionb, preguntaActual.getOpcionB());
+                ajustarTextoLabel(labelopcionc, preguntaActual.getOpcionC());
+                ajustarTextoLabel(labelopciond, preguntaActual.getOpcionD());
+                
+            }else{
+                // Caso con imágenes
+                ajustarImagenEnLabel(labelimagena, "src/main/resources" + preguntaActual.getOpcionA());
+                ajustarImagenEnLabel(labelimagenb, "src/main/resources" + preguntaActual.getOpcionB());
+                ajustarImagenEnLabel(labelimagenc, "src/main/resources" + preguntaActual.getOpcionC());
+                ajustarImagenEnLabel(labelimagend, "src/main/resources" + preguntaActual.getOpcionD());
 
-
+                // Limpiar los textos
+                labelopciona.setText(null);
+                labelopcionb.setText(null);
+                labelopcionc.setText(null);
+                labelopciond.setText(null);
+            }
             // Registrar la pregunta como respondida en la tabla preguntas_respondidas
-            registrarPreguntaRespondida(idTorneo, preguntaActual.getId());
+            //registrarPreguntaRespondida(idTorneo, preguntaActual.getId());
 
             // Incrementar el índice para la próxima pregunta
             indicePreguntaActual++;
@@ -185,6 +219,7 @@ public class juegologica {
         font = new Font("SansSerif", Font.PLAIN, fontSize);
         label.setFont(font);
     }
+    
     public static void ajustarTextoTitulo(JLabel label, String texto) {
         // Inicializar el tamaño de fuente
         int fontSize = 50;
@@ -219,20 +254,52 @@ public class juegologica {
         font = new Font("SansSerif", Font.BOLD, fontSize);
         label.setFont(font);
     }
+    
+    private void ajustarImagenEnLabel(JLabel label, String rutaImagen) {
+        ImageIcon iconoOriginal = new ImageIcon(rutaImagen);
+        Image imagen = iconoOriginal.getImage();
+
+        // Obtener las dimensiones del JLabel
+        int labelAncho = label.getWidth();
+        int labelAlto = label.getHeight();
+
+        // Obtener las dimensiones de la imagen
+        int imagenAncho = iconoOriginal.getIconWidth();
+        int imagenAlto = iconoOriginal.getIconHeight();
+
+        // Solo redimensionar si la imagen es más grande que el JLabel
+        if (imagenAncho > labelAncho || imagenAlto > labelAlto) {
+            // Escalar la imagen proporcionalmente
+            float relacionAncho = (float) labelAncho / imagenAncho;
+            float relacionAlto = (float) labelAlto / imagenAlto;
+            float escala = Math.min(relacionAncho, relacionAlto);
+
+            int nuevoAncho = Math.round(imagenAncho * escala);
+            int nuevoAlto = Math.round(imagenAlto * escala);
+
+            // Redimensionar la imagen
+            Image imagenEscalada = imagen.getScaledInstance(nuevoAncho, nuevoAlto, Image.SCALE_SMOOTH);
+            label.setIcon(new ImageIcon(imagenEscalada));
+        } else {
+            // Si la imagen es más pequeña que el JLabel, usar el tamaño original
+            label.setIcon(iconoOriginal);
+        }
+    }
 }
 
 class Pregunta {
     private int id;
     private String texto;
-    private String opcionA, opcionB, opcionC, opcionD;
+    private String opcionA, opcionB, opcionC, opcionD, vimagen;
 
-    public Pregunta(int id, String texto, String opcionA, String opcionB, String opcionC, String opcionD) {
+    public Pregunta(int id, String texto, String opcionA, String opcionB, String opcionC, String opcionD, String vimagen) {
         this.id = id;
         this.texto = texto;
         this.opcionA = opcionA;
         this.opcionB = opcionB;
         this.opcionC = opcionC;
         this.opcionD = opcionD;
+        this.vimagen = vimagen;
     }
 
     public int getId() {
@@ -257,5 +324,8 @@ class Pregunta {
 
     public String getOpcionD() {
         return opcionD;
+    }
+    public String getVImagen() {
+        return vimagen;
     }
 }
