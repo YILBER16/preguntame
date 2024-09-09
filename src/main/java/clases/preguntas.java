@@ -26,6 +26,7 @@ import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import textarea.TextArea;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
 
 public class preguntas {
@@ -77,7 +78,7 @@ public class preguntas {
         return this.asignatura; // O el nombre que deseas mostrar en el JComboBox
     }
 
-    public void insertarPregunta(TextArea paraPregunta, JComboBox<preguntas> paraAsignatura, JComboBox<preguntas> paraGrado, String rutaImagen) {
+    public void insertarPregunta(TextArea paraPregunta, JComboBox<preguntas> paraAsignatura, JComboBox<preguntas> paraGrado, String rutaImagen, JLabel lblImagen) {
         preguntas asignaturaSeleccionada = (preguntas) paraAsignatura.getSelectedItem();
         int idAsignaturaSeleccionada = asignaturaSeleccionada.getId();
 
@@ -102,6 +103,7 @@ public class preguntas {
                 paraPregunta.setText("");
                 paraAsignatura.setSelectedIndex(0);
                 paraGrado.setSelectedIndex(0);
+                lblImagen.setIcon(null);
                 JOptionPane.showMessageDialog(null, "Se insertó correctamente la pregunta");
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(null, "Error en la inserción, error: " + e.toString());

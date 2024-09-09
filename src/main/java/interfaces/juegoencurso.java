@@ -5,13 +5,25 @@
 package interfaces;
 
 import clases.juegologica;
+import com.panamahitek.ArduinoException;
+import com.panamahitek.PanamaHitek_Arduino;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-
+import javax.sound.sampled.Clip;
+import jssc.SerialPortEvent;
+import jssc.SerialPortEventListener;
+import jssc.SerialPortException;
 /**
  *
  * @author YILBER
@@ -20,12 +32,16 @@ public class juegoencurso extends javax.swing.JFrame {
 
     Color miColorPersonalizado = new Color(0, 148, 172);
     private int idTorneo;
+    private reproducirSonido reproductor;
+    private PanamaHitek_Arduino ino = new PanamaHitek_Arduino();
+    private juegologica juego;
     
     public juegoencurso(int idTorneo) {
+        iniciarComunicacion();
+        reproductor = new reproducirSonido();
         this.idTorneo = idTorneo;
         initComponents();
-        //ajustarTextoLabel(labelopciona, "Un texto es una composición de signos codificados en un sistema de escritura que forma una unidad. en un sistema de escritura que forma una unidad.  en un sistema de escritura que forma una unidadaaa.en un sistema de escritura que forma una unidad.  en un sistema de escritura que forma una unidadaa. en un sistema de escritura que forma una unidadaa.");
-        //ajustarTextoTitulo(labelpreguntas, "Cual es la longitud de la tierra? Cual es la longitud de la tierra? Cual es la longitud de la tierr? Cual es la longitud de la tierr longitud de la ?Cual es la longitud de la tierr longitud de la ?  Cual es la longitud de la tierr longitud de la ?Cual es la longitud de la tierr longitud de la ? ?Cual es la longitud de la tierr longitud de la ?");
+        labelAlerta.setOpaque(false);
        // Agregar un MouseListener para simular el comportamiento de un botón
         btna.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
@@ -39,12 +55,6 @@ public class juegoencurso extends javax.swing.JFrame {
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 // Restaurar el color de fondo cuando el cursor sale
                 btna.setIcon(new ImageIcon("src/main/resources/botones/buttonbase.png"));
-            }
-
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                // Acción al hacer clic en el JLabel (simular botón)
-                JOptionPane.showMessageDialog(null, "Hiciste clic en el botón simulado");
             }
         });
         btnb.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -60,12 +70,6 @@ public class juegoencurso extends javax.swing.JFrame {
                 // Restaurar el color de fondo cuando el cursor sale
                 btnb.setIcon(new ImageIcon("src/main/resources/botones/buttonbase.png"));
             }
-
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                // Acción al hacer clic en el JLabel (simular botón)
-                JOptionPane.showMessageDialog(null, "Hiciste clic en el botón simulado");
-            }
         });
         btnc.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
@@ -79,12 +83,6 @@ public class juegoencurso extends javax.swing.JFrame {
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 // Restaurar el color de fondo cuando el cursor sale
                 btnc.setIcon(new ImageIcon("src/main/resources/botones/buttonbase.png"));
-            }
-
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                // Acción al hacer clic en el JLabel (simular botón)
-                JOptionPane.showMessageDialog(null, "Hiciste clic en el botón simulado");
             }
         });
         btnd.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -101,16 +99,11 @@ public class juegoencurso extends javax.swing.JFrame {
                 btnd.setIcon(new ImageIcon("src/main/resources/botones/buttonbase.png"));
                 labelopciond.setForeground(Color.BLACK);
             }
-
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                // Acción al hacer clic en el JLabel (simular botón)
-                JOptionPane.showMessageDialog(null, "Hiciste clic en el botón simulado");
-            }
         });
         labelopciona.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
-                // Cambiar el color de fondo cuando el cursor entra
+                reproductor.cargarSonido("src/main/resources/sonidos/hover.wav");
+                reproductor.reproducir();
                 btna.setIcon(new ImageIcon("src/main/resources/botones/buttonbase2.png")); // Color personalizado
                 btna.setCursor(new Cursor(Cursor.HAND_CURSOR));
                 labelopciona.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -125,6 +118,8 @@ public class juegoencurso extends javax.swing.JFrame {
         labelopcionb.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 // Cambiar el color de fondo cuando el cursor entra
+                reproductor.cargarSonido("src/main/resources/sonidos/hover.wav");
+                reproductor.reproducir();
                 btnb.setIcon(new ImageIcon("src/main/resources/botones/buttonbase3.png")); // Color personalizado
                 btnb.setCursor(new Cursor(Cursor.HAND_CURSOR));
                 labelopcionb.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -139,6 +134,8 @@ public class juegoencurso extends javax.swing.JFrame {
         labelopcionc.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 // Cambiar el color de fondo cuando el cursor entra
+                reproductor.cargarSonido("src/main/resources/sonidos/hover.wav");
+                reproductor.reproducir();
                 btnc.setIcon(new ImageIcon("src/main/resources/botones/buttonbase4.png")); // Color personalizado
                 btnc.setCursor(new Cursor(Cursor.HAND_CURSOR));
                 labelopcionc.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -153,6 +150,8 @@ public class juegoencurso extends javax.swing.JFrame {
         labelopciond.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 // Cambiar el color de fondo cuando el cursor entra
+                reproductor.cargarSonido("src/main/resources/sonidos/hover.wav");
+                reproductor.reproducir();
                 btnd.setIcon(new ImageIcon("src/main/resources/botones/buttonbase5.png")); // Color personalizado
                 btnd.setCursor(new Cursor(Cursor.HAND_CURSOR));
                 labelopciond.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -164,7 +163,17 @@ public class juegoencurso extends javax.swing.JFrame {
                 btnd.setIcon(new ImageIcon("src/main/resources/botones/buttonbase.png"));
             }
         });
-        juegologica juego = new juegologica(labelpreguntas, labelopciona, labelopcionb, labelopcionc, labelopciond, btnsiguiente, labelimagena, labelimagenb, labelimagenc, labelimagend, 20);
+        btnsiguiente.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    enviarComandoReiniciar();
+                } catch (SerialPortException ex) {
+                    Logger.getLogger(juegoencurso.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        juego = new juegologica(labelpreguntas, labelopciona, labelopcionb, labelopcionc, labelopciond, btnsiguiente, labelAlerta, lblimgpregunta, 30, this);
     }
 
     @SuppressWarnings("unchecked")
@@ -175,11 +184,9 @@ public class juegoencurso extends javax.swing.JFrame {
         materialShadow1 = new efectos.MaterialShadow();
         rSButtonPaneBeanInfo1 = new rojerusan.RSButtonPaneBeanInfo();
         jPanel6 = new javax.swing.JPanel();
+        boton1 = new botones.boton();
+        labelAlerta = new javax.swing.JLabel();
         btnsiguiente = new botones.boton();
-        labelimagenb = new javax.swing.JLabel();
-        labelimagenc = new javax.swing.JLabel();
-        labelimagend = new javax.swing.JLabel();
-        labelimagena = new javax.swing.JLabel();
         labelopciona = new javax.swing.JLabel();
         labelopcionb = new javax.swing.JLabel();
         labelopcionc = new javax.swing.JLabel();
@@ -197,15 +204,31 @@ public class juegoencurso extends javax.swing.JFrame {
         rSLabelImage6 = new rojerusan.RSLabelImage();
         btnb = new rojerusan.RSLabelImage();
         labelpreguntas = new javax.swing.JLabel();
-        rSLabelImage2 = new rojerusan.RSLabelImage();
+        lblimgpregunta = new rojerusan.RSLabelImage();
         rSLabelImage1 = new rojerusan.RSLabelImage();
         labelfondo = new javax.swing.JLabel();
-        panelbtn2 = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jPanel6.setBackground(new java.awt.Color(255, 255, 255));
         jPanel6.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        boton1.setBackground(new java.awt.Color(255, 102, 0));
+        boton1.setForeground(new java.awt.Color(255, 255, 255));
+        boton1.setText("Clasificación");
+        boton1.setToolTipText("");
+        boton1.setFocusable(false);
+        boton1.setFont(new java.awt.Font("Segoe UI Black", 3, 18)); // NOI18N
+        boton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                boton1ActionPerformed(evt);
+            }
+        });
+        jPanel6.add(boton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(1390, 10, 150, 50));
+
+        labelAlerta.setText("jLabel1");
+        jPanel6.add(labelAlerta, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 1540, 800));
 
         btnsiguiente.setText("Siguiente");
         btnsiguiente.addActionListener(new java.awt.event.ActionListener() {
@@ -214,18 +237,6 @@ public class juegoencurso extends javax.swing.JFrame {
             }
         });
         jPanel6.add(btnsiguiente, new org.netbeans.lib.awtextra.AbsoluteConstraints(1250, 720, 240, 60));
-
-        labelimagenb.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jPanel6.add(labelimagenb, new org.netbeans.lib.awtextra.AbsoluteConstraints(960, 260, 440, 180));
-
-        labelimagenc.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jPanel6.add(labelimagenc, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 500, 440, 180));
-
-        labelimagend.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jPanel6.add(labelimagend, new org.netbeans.lib.awtextra.AbsoluteConstraints(910, 500, 440, 180));
-
-        labelimagena.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jPanel6.add(labelimagena, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 260, 440, 180));
 
         labelopciona.setFont(new java.awt.Font("Segoe UI", 3, 20)); // NOI18N
         labelopciona.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
@@ -300,8 +311,13 @@ public class juegoencurso extends javax.swing.JFrame {
         labelpreguntas.setText("Cual es la longitud de la tierra?");
         jPanel6.add(labelpreguntas, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 60, 1130, 150));
 
-        rSLabelImage2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/interfaces/logo.png"))); // NOI18N
-        jPanel6.add(rSLabelImage2, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 10, -1, -1));
+        lblimgpregunta.setIcon(new javax.swing.ImageIcon(getClass().getResource("/interfaces/logo.png"))); // NOI18N
+        lblimgpregunta.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lblimgpreguntaMouseClicked(evt);
+            }
+        });
+        jPanel6.add(lblimgpregunta, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 10, -1, -1));
 
         rSLabelImage1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/interfaces/panelquestion.png"))); // NOI18N
         jPanel6.add(rSLabelImage1, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 50, 1290, 170));
@@ -310,29 +326,7 @@ public class juegoencurso extends javax.swing.JFrame {
         labelfondo.setText("jLabel1");
         jPanel6.add(labelfondo, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 1540, 800));
 
-        panelbtn2.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-        jPanel6.add(panelbtn2, new org.netbeans.lib.awtextra.AbsoluteConstraints(820, 290, -1, -1));
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1540, Short.MAX_VALUE)
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, 1540, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 800, Short.MAX_VALUE)
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, 800, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
-        );
+        getContentPane().add(jPanel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, -1, -1));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -348,6 +342,14 @@ public class juegoencurso extends javax.swing.JFrame {
     private void btnsiguienteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnsiguienteActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_btnsiguienteActionPerformed
+
+    private void lblimgpreguntaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblimgpreguntaMouseClicked
+    }//GEN-LAST:event_lblimgpreguntaMouseClicked
+
+    private void boton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_boton1ActionPerformed
+        clasificacionUi objetoClasificacion = new clasificacionUi(idTorneo);
+        objetoClasificacion.setVisible(true);
+    }//GEN-LAST:event_boton1ActionPerformed
 
     public static void ajustarTextoLabel(JLabel label, String texto) {
         // Inicializar el tamaño de fuente
@@ -419,15 +421,93 @@ public class juegoencurso extends javax.swing.JFrame {
         label.setFont(font);
     }
     
+    public void iniciarComunicacion() {
+        // Listener para manejar los eventos del puerto serial
+        SerialPortEventListener listener = new SerialPortEventListener() {
+            @Override
+            public void serialEvent(SerialPortEvent spe) {
+                try {
+                    if (ino.isMessageAvailable()) {
+                        // Recibir el mensaje desde Arduino
+                        String mensaje = ino.printMessage();
+//                        reproductor = new clases.reproducirSonido();
+                        // Limpiar cualquier imagen previa antes de asignar el nuevo GIF
+                        labelAlerta.setIcon(null);
+                        labelAlerta.revalidate();
+                        labelAlerta.repaint();
+
+                        // Variable para almacenar el icono
+                        ImageIcon iconoGif = null;
+                        // Verificar si la respuesta es correcta (idtiporespuesta = 1)
+                        if (mensaje.equals("1")) {
+                            iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage("src/main/resources/alertas/alerta-azul.gif"));
+                            reproductor.cargarSonido("src/main/resources/sonidos/soundnotificacion.wav");
+                            reproductor.reproducir();
+                        }else if (mensaje.equals("2")) {
+                            iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage("src/main/resources/alertas/alerta-verde.gif"));
+                            reproductor.cargarSonido("src/main/resources/sonidos/soundnotificacion.wav");
+                            reproductor.reproducir();
+                            
+                        }else if (mensaje.equals("3")) {
+                            iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage("src/main/resources/alertas/alerta-amarillo.gif"));
+                            reproductor.cargarSonido("src/main/resources/sonidos/soundnotificacion.wav");
+                            reproductor.reproducir();
+                            
+                        }else if (mensaje.equals("4")) {
+                            iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage("src/main/resources/alertas/alerta-rojo.gif"));
+                            reproductor.cargarSonido("src/main/resources/sonidos/soundnotificacion.wav");
+                            reproductor.reproducir();
+                        }
+                        // Asignar el nuevo GIF al JLabel
+                        labelAlerta.setIcon(iconoGif);
+                        labelAlerta.revalidate();
+                        labelAlerta.repaint();
+                        juego.botonPresionar(mensaje);
+                    }
+                } catch (SerialPortException | ArduinoException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        };
+
+        try {
+            // Inicializar la comunicación con Arduino (puerto y baud rate)
+            ino.arduinoRXTX("COM6", 9600, listener);
+        } catch (ArduinoException ex) {
+            ex.printStackTrace();
+        }
+    }
+    
+    private void enviarComandoReiniciar() throws SerialPortException {
+        try {
+            if (ino != null) {
+                ino.sendData("R");  // Envía el comando 'R' para reiniciar
+            }
+        } catch (ArduinoException ex) {
+            Logger.getLogger(juegoencurso.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    public void enviarComandoIncorrecto() throws SerialPortException {
+        try {
+            if (ino != null) {
+                ino.sendData("I");  // Envía el comando 'R' para reiniciar
+            }
+        } catch (ArduinoException ex) {
+            Logger.getLogger(juegoencurso.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new juegoencurso(20).setVisible(true);
+                
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private botones.boton boton1;
     private rojerusan.RSLabelImage btna;
     private rojerusan.RSLabelImage btnb;
     private rojerusan.RSLabelImage btnc;
@@ -438,25 +518,48 @@ public class juegoencurso extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel6;
+    private javax.swing.JLabel labelAlerta;
     private javax.swing.JLabel labelfondo;
-    private javax.swing.JLabel labelimagena;
-    private javax.swing.JLabel labelimagenb;
-    private javax.swing.JLabel labelimagenc;
-    private javax.swing.JLabel labelimagend;
     private javax.swing.JLabel labelopciona;
     private javax.swing.JLabel labelopcionb;
     private javax.swing.JLabel labelopcionc;
     private javax.swing.JLabel labelopciond;
     private javax.swing.JLabel labelpreguntas;
+    private rojerusan.RSLabelImage lblimgpregunta;
     private efectos.MaterialShadow materialShadow1;
-    private javax.swing.JPanel panelbtn2;
     private rojerusan.RSButtonPaneBeanInfo rSButtonPaneBeanInfo1;
     private rojerusan.RSLabelImage rSLabelImage1;
-    private rojerusan.RSLabelImage rSLabelImage2;
     private rojerusan.RSLabelImage rSLabelImage4;
     private rojerusan.RSLabelImage rSLabelImage6;
     private rojerusan.RSLabelImage rSLabelImage8;
     private rojerusan.RSLabelImage rSLabelImage9;
     private efectos.Roboto roboto1;
     // End of variables declaration//GEN-END:variables
+}
+
+class reproducirSonido{
+    private Clip clip;
+     // Método para reproducir el sonido MP3
+    public void cargarSonido(String ruta) {
+        try {
+            File archivoSonido = new File(ruta);
+            AudioInputStream audio = AudioSystem.getAudioInputStream(archivoSonido);
+            clip = AudioSystem.getClip();
+            clip.open(audio);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void reproducir(){
+        if(clip != null){
+            clip.setFramePosition(0);
+            clip.start();
+        }
+    }
+    public void detener(){
+        if(clip != null && clip.isRunning()){
+            clip.stop();
+        }
+    }
 }

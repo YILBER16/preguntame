@@ -336,9 +336,13 @@ public class vistapreguntas extends javax.swing.JFrame {
         preguntas objetoPreguntas = new preguntas();
         byte[] imagenEnBytes = getImagen(Ruta);
         // Construir la ruta relativa
-        String rutaRelativa = "/preguntas/" + new File(Ruta).getName();
-        objetoPreguntas.insertarPregunta(txtpregunta, idasignatura, idgrado, rutaRelativa);
+        String rutaRelativa = "";
+        if (Ruta != null && !Ruta.isEmpty()) {
+          rutaRelativa = "/preguntas/" + new File(Ruta).getName();
+        }
+        objetoPreguntas.insertarPregunta(txtpregunta, idasignatura, idgrado, rutaRelativa, lblImagen);
         objetoPreguntas.mostrarPreguntas(tablapreguntas);
+        Ruta = "";
     }//GEN-LAST:event_btnguardarActionPerformed
 
     private void tablapreguntasMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tablapreguntasMouseClicked

@@ -15,6 +15,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -29,7 +30,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
@@ -60,22 +63,6 @@ public class creartorneo extends javax.swing.JFrame {
     private int radius = 0;
     private static creartorneo instancia;
     private DefaultTableModel modeloParticipantes;
-    
-//    PanamaHitek_Arduino ino = new PanamaHitek_Arduino();
-//    SerialPortEventListener listen = new SerialPortEventListener() {
-//        @Override
-//        public void serialEvent(SerialPortEvent spe) {
-//            try {
-//                if(ino.isMessageAvailable()){
-//                    System.out.println(ino.printMessage());
-//                }
-//            } catch (SerialPortException ex) {
-//                Logger.getLogger(conexionarduino.class.getName()).log(Level.SEVERE, null, ex);
-//            } catch (ArduinoException ex) {
-//                Logger.getLogger(conexionarduino.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
-//    };
     
     public creartorneo() {
         initComponents();
@@ -110,68 +97,92 @@ public class creartorneo extends javax.swing.JFrame {
             }
         });
  
-        btnGo.addActionListener(new ActionListener() {
+       btnGo.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {     
-                // Crear el JComboBox que será llenado con los datos de la base de datos
+                // Crear el JComboBox para las asignaturas y para los grados
                 JComboBox<torneo> comboBoxAsignaturas = new JComboBox<>();
+                JComboBox<torneo> comboBoxGrados = new JComboBox<>();
                 int elementosTabla = tablaparticipantes.getRowCount();
-                
-                if(elementosTabla>=2){
-                    // Realizar la consulta para obtener las asignaturas
-                    String sql = "SELECT id, asignatura FROM asignaturas";
+
+                if (elementosTabla >= 2) {
+                    // Realizar la consulta para obtener las asignaturas y grados
+                    String sqlAsignaturas = "SELECT id, asignatura FROM asignaturas";
+                    String sqlGrados = "SELECT id, grado FROM grados";
                     conexionbd con = new conexionbd();
                     Connection conexion = con.establecerConexion();
 
-                    try (Statement st = conexion.createStatement(); 
-                         ResultSet rs = st.executeQuery(sql)) {
+                    try (Statement stAsignaturas = conexion.createStatement(); 
+                         ResultSet rsAsignaturas = stAsignaturas.executeQuery(sqlAsignaturas)) {
 
-                        // Agregar una opción inicial "Seleccione una opción"
-                        comboBoxAsignaturas.addItem(new torneo(0, "Seleccione una opción", null));
+                        // Agregar una opción inicial "Seleccione una opción" para asignaturas
+                        comboBoxAsignaturas.addItem(new torneo(0, "Seleccione una asignatura", null));
 
                         // Llenar el JComboBox con las asignaturas de la base de datos
-                        while (rs.next()) {
-                            int id = rs.getInt("id");
-                            String nombre = rs.getString("asignatura");
+                        while (rsAsignaturas.next()) {
+                            int id = rsAsignaturas.getInt("id");
+                            String nombre = rsAsignaturas.getString("asignatura");
                             torneo asignatura = new torneo(id, nombre, null);
                             comboBoxAsignaturas.addItem(asignatura);
                         }
                     } catch (SQLException ex) {
                         JOptionPane.showMessageDialog(null, "Error al cargar asignaturas: " + ex.toString());
-                        return;  // Si hay un error, detener la ejecución
+                        return;
                     }
 
-                    // Mostrar el JOptionPane con el JComboBox lleno
+                    try (Statement stGrados = conexion.createStatement(); 
+                         ResultSet rsGrados = stGrados.executeQuery(sqlGrados)) {
+
+                        // Agregar una opción inicial "Seleccione un grado" para grados
+                        comboBoxGrados.addItem(new torneo(0, "Seleccione un grado", null));
+
+                        // Llenar el JComboBox con los grados de la base de datos
+                        while (rsGrados.next()) {
+                            int id = rsGrados.getInt("id");
+                            String nombreGrado = rsGrados.getString("grado");
+                            torneo g = new torneo(id, nombreGrado, null);
+                            comboBoxGrados.addItem(g);
+                        }
+
+                    } catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(null, "Error al cargar grados: " + ex.toString());
+                        return;
+                    }
+
+                    // Crear un JPanel y agregar los JComboBox
+                    JPanel panel = new JPanel(new GridLayout(2, 2));
+                    panel.add(new JLabel("Seleccione la asignatura:"));
+                    panel.add(comboBoxAsignaturas);
+                    panel.add(new JLabel("Seleccione el grado:"));
+                    panel.add(comboBoxGrados);
+
+                    // Mostrar el JOptionPane con el JPanel que contiene los JComboBox
                     int opcion = JOptionPane.showConfirmDialog(
                         null,  // El padre del JOptionPane, puede ser tu JFrame si lo necesitas
-                        comboBoxAsignaturas,
-                        "Seleccione una asignatura",
+                        panel,
+                        "Seleccione la asignatura y el grado",
                         JOptionPane.OK_CANCEL_OPTION,
                         JOptionPane.QUESTION_MESSAGE
                     );
 
                     // Verificar si se presionó OK
                     if (opcion == JOptionPane.OK_OPTION) {
-                        torneo seleccion = (torneo) comboBoxAsignaturas.getSelectedItem();
-                        if (seleccion != null && seleccion.getId() != 0) {
-                            objetoCrearTorneo.iniciarTorneo(tablaparticipantes, comboBoxAsignaturas);
+                        torneo seleccionAsignatura = (torneo) comboBoxAsignaturas.getSelectedItem();
+                        torneo seleccionGrado = (torneo) comboBoxGrados.getSelectedItem();
+                        if (seleccionAsignatura != null && seleccionAsignatura.getId() != 0 &&
+                            seleccionGrado != null && seleccionGrado.getId() != 0) {
+                            // Llamar al método iniciarTorneo con los valores seleccionados
+                            objetoCrearTorneo.iniciarTorneo(tablaparticipantes, comboBoxAsignaturas, comboBoxGrados);
                         } else {
-                            JOptionPane.showMessageDialog(null, "No seleccionaste una asignatura válida.");
+                            JOptionPane.showMessageDialog(null, "No seleccionaste una asignatura o un grado válido.");
                         }
                     }                      
-                }else{
-                    JOptionPane.showMessageDialog(null, "Por favor agregue minimo 2 participantes");
+                } else {
+                    JOptionPane.showMessageDialog(null, "Por favor agregue mínimo 2 participantes");
                 }
             }
         });
 
-//        try {
-//            ino.arduinoRX("COM6", 9600, listen);
-//        } catch (ArduinoException ex) {
-//            Logger.getLogger(conexionarduino.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (SerialPortException ex) {
-//            Logger.getLogger(conexionarduino.class.getName()).log(Level.SEVERE, null, ex);
-//        }
     }
 
     public JButton getBtnGuardar() {
@@ -360,6 +371,7 @@ public class creartorneo extends javax.swing.JFrame {
         modeloParticipantes.addColumn("Participante / Equipo");
         modeloParticipantes.addColumn("Imágenes");
         modeloParticipantes.addColumn("Color");
+        modeloParticipantes.addColumn("idcolor");
 
         tablaparticipantes.setModel(modeloParticipantes);
         //tablaparticipantes.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -368,6 +380,10 @@ public class creartorneo extends javax.swing.JFrame {
         columnModel.getColumn(1).setPreferredWidth(400);
         columnModel.getColumn(2).setPreferredWidth(500);
         columnModel.getColumn(3).setPreferredWidth(140);
+        
+        columnModel.getColumn(4).setMinWidth(0);
+        columnModel.getColumn(4).setMaxWidth(0);
+        columnModel.getColumn(4).setWidth(0);
 
         DefaultTableCellRenderer centroRenderer = new DefaultTableCellRenderer();
         centroRenderer.setHorizontalAlignment(SwingConstants.CENTER);

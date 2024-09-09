@@ -20,6 +20,8 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import java.awt.image.BufferedImage;
 import java.sql.CallableStatement;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -35,6 +37,7 @@ public class torneo {
     private String nombre;
     private String color;
     private String representacion;
+    private Map<Integer, Integer> filaColorMap = new HashMap<>();
     
     public torneo() {
         
@@ -51,19 +54,23 @@ public class torneo {
         return this.nombre; // O el nombre que deseas mostrar en el JComboBox
     }
     
-    public void iniciarTorneo(JTable tblParticipantes, JComboBox<torneo> comboAsignatura) {
+    public void iniciarTorneo(JTable tblParticipantes, JComboBox<torneo> comboAsignatura, JComboBox<torneo> comboGrados) {
         DefaultTableModel model = (DefaultTableModel) tblParticipantes.getModel();
         torneo asignaturaSeleccionada = (torneo) comboAsignatura.getSelectedItem();
         int idasignatura = asignaturaSeleccionada.getId();
-
+        
+        torneo gradoSeleccionado = (torneo) comboGrados.getSelectedItem();
+        int idgrado = gradoSeleccionado.getId();
+        
         conexionbd objetoConexion = new conexionbd();
-        String sqlTorneo = "INSERT INTO torneo(idasignatura, idestadostorneos) VALUES (?, ?);";
+        String sqlTorneo = "INSERT INTO torneo(idasignatura, idgrado, idestadostorneos) VALUES (?, ?, ?);";
         int idTorneoGenerado = -1; 
 
         try {
             CallableStatement cs = objetoConexion.establecerConexion().prepareCall(sqlTorneo);
             cs.setInt(1, idasignatura);
-            cs.setInt(2, 2);
+            cs.setInt(2, idgrado);
+            cs.setInt(3, 2);
             cs.execute();
 
             // Obtener las claves generadas (ID del torneo)
@@ -75,6 +82,7 @@ public class torneo {
             // Recorrer cada fila de la tabla
             for (int i = 0; i < model.getRowCount(); i++) {
                 String idParticipante = (String) model.getValueAt(i, 0);
+                int idColor = (int) model.getValueAt(i, 4);
 
                 String sqlConsulta = "Select idequipo from participantes where id="+idParticipante+"";
                 Statement st;
@@ -93,7 +101,7 @@ public class torneo {
                    }
                 }
 
-                String sqlParticipantes = "INSERT INTO torneoparticipantes(idtorneo, idtipoparticipante, idparticipante, idequipo) VALUES (?, ?, ?, ?);";
+                String sqlParticipantes = "INSERT INTO torneoparticipantes(idtorneo, idtipoparticipante, idparticipante, idequipo, idcolor) VALUES (?, ?, ?, ?, ?);";
 
                 CallableStatement csParticipantes = objetoConexion.establecerConexion().prepareCall(sqlParticipantes);
                 csParticipantes.setInt(1, idTorneoGenerado);
@@ -105,6 +113,7 @@ public class torneo {
                     csParticipantes.setNull(3, java.sql.Types.INTEGER); 
                     csParticipantes.setInt(4, idequipo);
                 }
+                csParticipantes.setInt(5, idColor);
                 csParticipantes.execute();
             }
 
@@ -190,7 +199,7 @@ public class torneo {
             }
 
             // Conservar los datos anteriores en el modelo
-            Object[] datos = new Object[4];
+            Object[] datos = new Object[5];
             conexionbd con = new conexionbd();
             Connection conexion = con.establecerConexion();
 
@@ -230,8 +239,10 @@ public class torneo {
                     Color.append("</div>");
                     Color.append("</html>");
                     datos[3] = Color.toString();
+                    datos[4] = idColorSeleccionado;
 
                     modelo.addRow(datos);
+                    filaColorMap.put(modelo.getRowCount() - 1, idColorSeleccionado);
                 } else {
                     while (rs.next()) {
                         datos[0] = rs.getString(1);  // ID del participante
@@ -246,7 +257,9 @@ public class torneo {
                         Color.append("</div>");
                         Color.append("</html>");
                         datos[3] = Color.toString();
+                        datos[4] = idColorSeleccionado;
                         modelo.addRow(datos);
+                        filaColorMap.put(modelo.getRowCount() - 1, idColorSeleccionado);
                     }
                 }
 
