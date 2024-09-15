@@ -5,6 +5,7 @@
 package interfaces;
 
 import clases.clasificacionLogica;
+import clases.juegologica;
 import javax.swing.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,13 +18,14 @@ public class clasificacionUi extends javax.swing.JFrame {
         this.idTorneo = idTorneo;
         initComponents(); // Inicializa los componentes de la interfaz gráfica
         clasificacionLogica objetoLogica = new clasificacionLogica();
-        objetoLogica.consultarClasificacion(28, nparticipantes1, nparticipantes2, nparticipantes3, nparticipantes4, imgpar1, imgpar2, imgpar3, imgpar4, npuntos1, npuntos2, npuntos3, npuntos4, n1, n2, n3, n4);
+        objetoLogica.consultarClasificacion(idTorneo, nparticipantes1, nparticipantes2, nparticipantes3, nparticipantes4, imgpar1, imgpar2, imgpar3, imgpar4, npuntos1, npuntos2, npuntos3, npuntos4, n1, n2, n3, n4);
     }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
+        btnsiguiente = new botones.boton();
         imgpar4 = new javax.swing.JLabel();
         npuntos4 = new javax.swing.JLabel();
         nparticipantes4 = new javax.swing.JLabel();
@@ -50,6 +52,17 @@ public class clasificacionUi extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        btnsiguiente.setForeground(new java.awt.Color(255, 51, 51));
+        btnsiguiente.setText("Siguiente pregunta");
+        btnsiguiente.setToolTipText("");
+        btnsiguiente.setFont(new java.awt.Font("Questions", 1, 36)); // NOI18N
+        btnsiguiente.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnsiguienteActionPerformed(evt);
+            }
+        });
+        jPanel1.add(btnsiguiente, new org.netbeans.lib.awtextra.AbsoluteConstraints(1200, 730, 310, 60));
         jPanel1.add(imgpar4, new org.netbeans.lib.awtextra.AbsoluteConstraints(610, 690, 350, 80));
 
         npuntos4.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -142,6 +155,11 @@ public class clasificacionUi extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnsiguienteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnsiguienteActionPerformed
+        juegoencurso objetojuego = new juegoencurso(idTorneo);
+        objetojuego.siguientePregunta(idTorneo);
+    }//GEN-LAST:event_btnsiguienteActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -159,6 +177,7 @@ public class clasificacionUi extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private botones.boton btnsiguiente;
     private javax.swing.JLabel imgpar1;
     private javax.swing.JLabel imgpar2;
     private javax.swing.JLabel imgpar3;

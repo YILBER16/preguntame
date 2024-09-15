@@ -19,6 +19,7 @@ import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -172,7 +173,7 @@ public class creartorneo extends javax.swing.JFrame {
                         if (seleccionAsignatura != null && seleccionAsignatura.getId() != 0 &&
                             seleccionGrado != null && seleccionGrado.getId() != 0) {
                             // Llamar al método iniciarTorneo con los valores seleccionados
-                            objetoCrearTorneo.iniciarTorneo(tablaparticipantes, comboBoxAsignaturas, comboBoxGrados);
+                            iniciarTorneo(tablaparticipantes, comboBoxAsignaturas, comboBoxGrados);
                         } else {
                             JOptionPane.showMessageDialog(null, "No seleccionaste una asignatura o un grado válido.");
                         }
@@ -182,7 +183,6 @@ public class creartorneo extends javax.swing.JFrame {
                 }
             }
         });
-
     }
 
     public JButton getBtnGuardar() {
@@ -199,6 +199,12 @@ public class creartorneo extends javax.swing.JFrame {
     private void initComponents() {
 
         comboSuggestionUI1 = new combo_suggestion.ComboSuggestionUI();
+        jPanel3 = new javax.swing.JPanel();
+        jPanel2 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        tablaparticipantes = new javax.swing.JTable();
+        btnGo = new botones.boton();
+        btnEliminar = new botones.boton();
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         idtipotorneo = new combo_suggestion.ComboBoxSuggestion();
@@ -207,63 +213,14 @@ public class creartorneo extends javax.swing.JFrame {
         jLabel4 = new javax.swing.JLabel();
         idcolor = new combo_suggestion.ComboBoxSuggestion();
         btnagregar = new botones.boton();
-        jPanel3 = new javax.swing.JPanel();
-        jPanel2 = new javax.swing.JPanel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        tablaparticipantes = new javax.swing.JTable();
-        btnGo = new botones.boton();
-        btnEliminar = new botones.boton();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        textnombre = new javax.swing.JTextField();
+        textnpreguntas = new javax.swing.JTextField();
+        btnRegresar = new botones.boton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        jPanel1.setBackground(new java.awt.Color(255, 255, 255));
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Datos", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Questions", 3, 36), new java.awt.Color(255, 102, 0))); // NOI18N
-        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        jLabel1.setFont(new java.awt.Font("Questions", 1, 24)); // NOI18N
-        jLabel1.setText("Tipo torneo");
-        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 70, 100, -1));
-
-        idtipotorneo.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        idtipotorneo.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                idtipotorneoMouseClicked(evt);
-            }
-        });
-        idtipotorneo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                idtipotorneoActionPerformed(evt);
-            }
-        });
-        jPanel1.add(idtipotorneo, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 60, 250, 40));
-
-        jLabel3.setFont(new java.awt.Font("Questions", 1, 24)); // NOI18N
-        jLabel3.setText("Participante");
-        jPanel1.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 70, 100, -1));
-
-        idparticipantes.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jPanel1.add(idparticipantes, new org.netbeans.lib.awtextra.AbsoluteConstraints(510, 60, 360, 40));
-
-        jLabel4.setFont(new java.awt.Font("Questions", 1, 24)); // NOI18N
-        jLabel4.setText("Color");
-        jPanel1.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(890, 70, 50, -1));
-
-        idcolor.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jPanel1.add(idcolor, new org.netbeans.lib.awtextra.AbsoluteConstraints(950, 60, 140, 40));
-
-        btnagregar.setBackground(new java.awt.Color(51, 51, 255));
-        btnagregar.setForeground(new java.awt.Color(255, 255, 255));
-        btnagregar.setText("+ agregar participante");
-        btnagregar.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
-        btnagregar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnagregarActionPerformed(evt);
-            }
-        });
-        jPanel1.add(btnagregar, new org.netbeans.lib.awtextra.AbsoluteConstraints(410, 120, 290, 40));
-
-        getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 10, 1120, 170));
 
         jPanel3.setBackground(new java.awt.Color(255, 255, 255));
         jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -295,7 +252,7 @@ public class creartorneo extends javax.swing.JFrame {
         });
         jScrollPane1.setViewportView(tablaparticipantes);
 
-        jPanel2.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(11, 66, 1098, 430));
+        jPanel2.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(11, 66, 1090, 370));
 
         btnGo.setBackground(new java.awt.Color(0, 153, 0));
         btnGo.setForeground(new java.awt.Color(255, 255, 255));
@@ -306,7 +263,7 @@ public class creartorneo extends javax.swing.JFrame {
                 btnGoActionPerformed(evt);
             }
         });
-        jPanel2.add(btnGo, new org.netbeans.lib.awtextra.AbsoluteConstraints(430, 500, 300, 50));
+        jPanel2.add(btnGo, new org.netbeans.lib.awtextra.AbsoluteConstraints(430, 450, 300, 50));
 
         btnEliminar.setBackground(new java.awt.Color(255, 0, 0));
         btnEliminar.setForeground(new java.awt.Color(255, 255, 255));
@@ -319,7 +276,78 @@ public class creartorneo extends javax.swing.JFrame {
         });
         jPanel2.add(btnEliminar, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 30, 143, 38));
 
-        jPanel3.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 190, -1, 550));
+        jPanel3.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 230, 1110, 510));
+
+        jPanel1.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Datos", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Questions", 3, 36), new java.awt.Color(255, 102, 0))); // NOI18N
+        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        jLabel1.setFont(new java.awt.Font("Questions", 1, 24)); // NOI18N
+        jLabel1.setText("NOMBRE TORNEO");
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 50, 130, -1));
+
+        idtipotorneo.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        idtipotorneo.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                idtipotorneoMouseClicked(evt);
+            }
+        });
+        idtipotorneo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                idtipotorneoActionPerformed(evt);
+            }
+        });
+        jPanel1.add(idtipotorneo, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 100, 210, 40));
+
+        jLabel3.setFont(new java.awt.Font("Questions", 1, 30)); // NOI18N
+        jLabel3.setText("Participante");
+        jPanel1.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 110, 130, 30));
+
+        idparticipantes.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        jPanel1.add(idparticipantes, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 100, 280, 40));
+
+        jLabel4.setFont(new java.awt.Font("Questions", 1, 24)); // NOI18N
+        jLabel4.setText("Color");
+        jPanel1.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(890, 110, 50, -1));
+
+        idcolor.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        jPanel1.add(idcolor, new org.netbeans.lib.awtextra.AbsoluteConstraints(950, 100, 140, 40));
+
+        btnagregar.setBackground(new java.awt.Color(51, 51, 255));
+        btnagregar.setForeground(new java.awt.Color(255, 255, 255));
+        btnagregar.setText("+ agregar participante");
+        btnagregar.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
+        btnagregar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnagregarActionPerformed(evt);
+            }
+        });
+        jPanel1.add(btnagregar, new org.netbeans.lib.awtextra.AbsoluteConstraints(410, 160, 290, 40));
+
+        jLabel2.setFont(new java.awt.Font("Questions", 1, 30)); // NOI18N
+        jLabel2.setText("Tipo torneo");
+        jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 107, 120, 30));
+
+        jLabel5.setFont(new java.awt.Font("Questions", 1, 24)); // NOI18N
+        jLabel5.setText("n PREGUNTAS");
+        jPanel1.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(830, 50, 110, -1));
+        jPanel1.add(textnombre, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 40, 650, 40));
+        jPanel1.add(textnpreguntas, new org.netbeans.lib.awtextra.AbsoluteConstraints(950, 40, 140, 40));
+
+        jPanel3.add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 1120, 210));
+
+        btnRegresar.setBackground(new java.awt.Color(0, 102, 255));
+        btnRegresar.setForeground(new java.awt.Color(255, 255, 255));
+        btnRegresar.setText("Regresar");
+        btnRegresar.setActionCommand("Cerrar sesión :(");
+        btnRegresar.setFocusable(false);
+        btnRegresar.setFont(new java.awt.Font("Arial", 1, 24)); // NOI18N
+        btnRegresar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRegresarActionPerformed(evt);
+            }
+        });
+        jPanel3.add(btnRegresar, new org.netbeans.lib.awtextra.AbsoluteConstraints(970, 10, 150, 50));
 
         getContentPane().add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 1160, 760));
 
@@ -352,6 +380,12 @@ public class creartorneo extends javax.swing.JFrame {
     private void idtipotorneoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_idtipotorneoActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_idtipotorneoActionPerformed
+
+    private void btnRegresarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegresarActionPerformed
+        this.setVisible(false);
+        cargarJuego objetoCargar = new cargarJuego();
+        objetoCargar.setVisible(true);
+    }//GEN-LAST:event_btnRegresarActionPerformed
 
     private void configurarTablaParticipantes() {
         modeloParticipantes = new DefaultTableModel() {
@@ -404,6 +438,98 @@ public class creartorneo extends javax.swing.JFrame {
         // Desactivar el redimensionamiento de la columna
         columna.setResizable(false);
     }
+    
+     public void iniciarTorneo(JTable tblParticipantes, JComboBox<torneo> comboAsignatura, JComboBox<torneo> comboGrados) {
+        DefaultTableModel model = (DefaultTableModel) tblParticipantes.getModel();
+        torneo asignaturaSeleccionada = (torneo) comboAsignatura.getSelectedItem();
+        int idasignatura = asignaturaSeleccionada.getId();
+        
+        torneo gradoSeleccionado = (torneo) comboGrados.getSelectedItem();
+        int idgrado = gradoSeleccionado.getId();
+        String nombre = textnombre.getText();
+        String npreguntas = textnpreguntas.getText();
+        
+        conexionbd objetoConexion = new conexionbd();
+        String sqlTorneo = "INSERT INTO torneo(nombre, npreguntas, idasignatura, idgrado, idestadostorneos) VALUES (?, ?, ?, ?, ?);";
+        int idTorneoGenerado = -1; 
+
+        try {
+            CallableStatement cs = objetoConexion.establecerConexion().prepareCall(sqlTorneo);
+            cs.setString(1, nombre);
+            cs.setString(2, npreguntas);
+            cs.setInt(3, idasignatura);
+            cs.setInt(4, idgrado);
+            cs.setInt(5, 2);
+            cs.execute();
+
+            // Obtener las claves generadas (ID del torneo)
+            ResultSet rs = cs.getGeneratedKeys();
+            if (rs.next()) {
+                idTorneoGenerado = rs.getInt(1);  // Obtener el ID generado
+            }
+
+            // Recorrer cada fila de la tabla
+            for (int i = 0; i < model.getRowCount(); i++) {
+                String idParticipante = (String) model.getValueAt(i, 0);
+                int idColor = (int) model.getValueAt(i, 4);
+
+                String sqlConsulta = "Select idequipo from participantes where id="+idParticipante+"";
+                Statement st;
+                System.out.println("tipo participante "+idParticipante);
+                st = objetoConexion.establecerConexion().createStatement();
+                ResultSet rsConsulta = st.executeQuery(sqlConsulta);
+                int idtipoparticipante = 0;
+                int idequipo = 0;
+                while (rsConsulta.next()) {
+                    
+                   if(rsConsulta.getInt(1) == 1){
+                       idtipoparticipante = 1;
+                   }else{
+                       idtipoparticipante = 2;
+                       idequipo = rsConsulta.getInt(1);
+                   }
+                }
+
+                String sqlParticipantes = "INSERT INTO torneoparticipantes(idtorneo, idtipoparticipante, idparticipante, idequipo, idcolor) VALUES (?, ?, ?, ?, ?);";
+
+                CallableStatement csParticipantes = objetoConexion.establecerConexion().prepareCall(sqlParticipantes);
+                csParticipantes.setInt(1, idTorneoGenerado);
+                csParticipantes.setInt(2, idtipoparticipante);
+                if (idtipoparticipante == 1) {
+                    csParticipantes.setString(3, idParticipante);
+                    csParticipantes.setNull(4, java.sql.Types.INTEGER);
+                } else {
+                    csParticipantes.setNull(3, java.sql.Types.INTEGER); 
+                    csParticipantes.setInt(4, idequipo);
+                }
+                csParticipantes.setInt(5, idColor);
+                csParticipantes.execute();
+            }
+
+            JOptionPane.showMessageDialog(null, "Se inició el torneo con éxito");
+            
+            juegoencurso vistaJuego = new juegoencurso(idTorneoGenerado); // Pasar el ID del torneo si es necesario
+            cargarJuego vistaCargar = new cargarJuego();
+            
+            this.setVisible(false);
+            
+            vistaJuego.addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosing(java.awt.event.WindowEvent e) {
+                    // Mostrar de nuevo el formlogin cuando la ventana de equipos se cierra
+                    vistaCargar.refrescarTablaTorneos();
+                    vistaCargar.getInstancia().setVisible(true);
+                }
+            });
+            
+            vistaJuego.setVisible(true);
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error en la creación del torneo, error: " + e.toString());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error inesperado: " + e.toString());
+        }
+    }
     public static void main(String args[]) {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -421,19 +547,24 @@ public class creartorneo extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private botones.boton btnEliminar;
     private botones.boton btnGo;
+    private botones.boton btnRegresar;
     private botones.boton btnagregar;
     private combo_suggestion.ComboSuggestionUI comboSuggestionUI1;
     private combo_suggestion.ComboBoxSuggestion idcolor;
     private combo_suggestion.ComboBoxSuggestion idparticipantes;
     private combo_suggestion.ComboBoxSuggestion idtipotorneo;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tablaparticipantes;
+    private javax.swing.JTextField textnombre;
+    private javax.swing.JTextField textnpreguntas;
     // End of variables declaration//GEN-END:variables
 
     public boolean isOver() {

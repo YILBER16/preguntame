@@ -29,6 +29,8 @@ public class vistalogin extends javax.swing.JFrame {
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
+        rSLabelImage11 = new rojerusan.RSLabelImage();
+        rSLabelImage12 = new rojerusan.RSLabelImage();
         inputpassword = new javax.swing.JPasswordField();
         jLabel2 = new javax.swing.JLabel();
         inputusers = new javax.swing.JTextField();
@@ -39,14 +41,25 @@ public class vistalogin extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        rSLabelImage11.setForeground(new java.awt.Color(255, 255, 255));
+        rSLabelImage11.setIcon(new javax.swing.ImageIcon(getClass().getResource("/interfaces/COLCARMEN.png"))); // NOI18N
+        jPanel1.add(rSLabelImage11, new org.netbeans.lib.awtextra.AbsoluteConstraints(520, 390, 100, 100));
+
+        rSLabelImage12.setForeground(new java.awt.Color(255, 255, 255));
+        rSLabelImage12.setIcon(new javax.swing.ImageIcon(getClass().getResource("/interfaces/ideatech.png"))); // NOI18N
+        jPanel1.add(rSLabelImage12, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 10, 220, 90));
 
         inputpassword.setFont(new java.awt.Font("Raleway", 0, 24)); // NOI18N
         inputpassword.setForeground(new java.awt.Color(255, 102, 0));
         inputpassword.setSelectionColor(new java.awt.Color(255, 51, 0));
+        jPanel1.add(inputpassword, new org.netbeans.lib.awtextra.AbsoluteConstraints(444, 260, 252, 41));
 
         jLabel2.setFont(new java.awt.Font("Questions", 0, 30)); // NOI18N
         jLabel2.setForeground(new java.awt.Color(255, 51, 0));
         jLabel2.setText("PASSWORD");
+        jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(444, 215, -1, -1));
 
         inputusers.setFont(new java.awt.Font("Questions", 0, 24)); // NOI18N
         inputusers.setForeground(new java.awt.Color(255, 51, 0));
@@ -57,10 +70,12 @@ public class vistalogin extends javax.swing.JFrame {
                 inputusersActionPerformed(evt);
             }
         });
+        jPanel1.add(inputusers, new org.netbeans.lib.awtextra.AbsoluteConstraints(444, 154, 252, 43));
 
         jLabel3.setFont(new java.awt.Font("Questions", 0, 30)); // NOI18N
         jLabel3.setForeground(new java.awt.Color(255, 51, 0));
         jLabel3.setText("USUARIO");
+        jPanel1.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(444, 103, -1, -1));
 
         boton1.setBackground(new java.awt.Color(255, 102, 0));
         boton1.setForeground(new java.awt.Color(255, 255, 255));
@@ -72,50 +87,18 @@ public class vistalogin extends javax.swing.JFrame {
                 boton1ActionPerformed(evt);
             }
         });
+        jPanel1.add(boton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(444, 313, -1, 49));
 
         rSLabelImage1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/interfaces/imgLogin.png"))); // NOI18N
-
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(rSLabelImage1, javax.swing.GroupLayout.PREFERRED_SIZE, 426, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel3)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(inputpassword, javax.swing.GroupLayout.DEFAULT_SIZE, 252, Short.MAX_VALUE)
-                            .addComponent(inputusers)
-                            .addComponent(boton1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(0, 47, Short.MAX_VALUE))))
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(103, 103, 103)
-                .addComponent(jLabel3)
-                .addGap(18, 18, 18)
-                .addComponent(inputusers, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jLabel2)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(inputpassword, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(boton1, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(169, Short.MAX_VALUE))
-            .addComponent(rSLabelImage1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
+        jPanel1.add(rSLabelImage1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 426, 531));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 729, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 6, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -155,5 +138,7 @@ public class vistalogin extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
     private rojerusan.RSLabelImage rSLabelImage1;
+    private rojerusan.RSLabelImage rSLabelImage11;
+    private rojerusan.RSLabelImage rSLabelImage12;
     // End of variables declaration//GEN-END:variables
 }

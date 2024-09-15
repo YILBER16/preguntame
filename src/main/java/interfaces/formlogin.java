@@ -56,9 +56,14 @@ public class formlogin extends JFrame {
         rSComboMetroBeanInfo1 = new rojerusan.RSComboMetroBeanInfo();
         jPanel6 = new javax.swing.JPanel();
         rSLabelImage5 = new rojerusan.RSLabelImage();
+        labelopciond = new javax.swing.JLabel();
         kGradientPanel3 = new keeptoo.KGradientPanel();
         boton1 = new botones.boton();
+        jLabel3 = new javax.swing.JLabel();
         kGradientPanel4 = new keeptoo.KGradientPanel();
+        rSLabelImage12 = new rojerusan.RSLabelImage();
+        rSLabelImage11 = new rojerusan.RSLabelImage();
+        jLabel2 = new javax.swing.JLabel();
         panelasignaturas = new javax.swing.JPanel();
         rSLabelImage8 = new rojerusan.RSLabelImage();
         jLabel8 = new javax.swing.JLabel();
@@ -71,6 +76,9 @@ public class formlogin extends JFrame {
         panelparticipantes = new javax.swing.JPanel();
         rSLabelImage9 = new rojerusan.RSLabelImage();
         jLabel9 = new javax.swing.JLabel();
+        jLabel1 = new javax.swing.JLabel();
+        labelopciond1 = new javax.swing.JLabel();
+        labelopciond2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -81,8 +89,14 @@ public class formlogin extends JFrame {
         rSLabelImage5.setIcon(new javax.swing.ImageIcon(getClass().getResource("/interfaces/logo.png"))); // NOI18N
         jPanel6.add(rSLabelImage5, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 206, 202));
 
+        labelopciond.setFont(new java.awt.Font("Segoe UI", 2, 22)); // NOI18N
+        labelopciond.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        labelopciond.setText("<html><span style=\"text-aling:center\">DOCENTE ING. ROCIO CARREÑO<br><br>INTEGRANTES SEMILLERO IDEATECH</span></html>");
+        jPanel6.add(labelopciond, new org.netbeans.lib.awtextra.AbsoluteConstraints(1190, 470, 310, 190));
+
         kGradientPanel3.setkEndColor(new java.awt.Color(255, 102, 0));
         kGradientPanel3.setkStartColor(new java.awt.Color(255, 204, 0));
+        kGradientPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         boton1.setForeground(new java.awt.Color(255, 51, 0));
         boton1.setText("salir :(");
@@ -94,38 +108,61 @@ public class formlogin extends JFrame {
                 boton1ActionPerformed(evt);
             }
         });
+        kGradientPanel3.add(boton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(1158, 22, 171, 53));
 
-        javax.swing.GroupLayout kGradientPanel3Layout = new javax.swing.GroupLayout(kGradientPanel3);
-        kGradientPanel3.setLayout(kGradientPanel3Layout);
-        kGradientPanel3Layout.setHorizontalGroup(
-            kGradientPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, kGradientPanel3Layout.createSequentialGroup()
-                .addContainerGap(1153, Short.MAX_VALUE)
-                .addComponent(boton1, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(26, 26, 26))
-        );
-        kGradientPanel3Layout.setVerticalGroup(
-            kGradientPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, kGradientPanel3Layout.createSequentialGroup()
-                .addContainerGap(23, Short.MAX_VALUE)
-                .addComponent(boton1, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(14, 14, 14))
-        );
+        jLabel3.setFont(new java.awt.Font("Questions", 3, 48)); // NOI18N
+        jLabel3.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel3.setText("PREGUNTAME - SOFTWARE DE PREGUNTAS");
+        kGradientPanel3.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 17, 646, 68));
 
-        jPanel6.add(kGradientPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 70, 1350, 90));
+        jPanel6.add(kGradientPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 70, 1350, 100));
 
         kGradientPanel4.setkEndColor(new java.awt.Color(255, 102, 0));
         kGradientPanel4.setkStartColor(new java.awt.Color(255, 204, 51));
+
+        rSLabelImage12.setForeground(new java.awt.Color(255, 255, 255));
+        rSLabelImage12.setIcon(new javax.swing.ImageIcon(getClass().getResource("/interfaces/ideatech-NG_1.png"))); // NOI18N
+
+        rSLabelImage11.setForeground(new java.awt.Color(255, 255, 255));
+        rSLabelImage11.setIcon(new javax.swing.ImageIcon(getClass().getResource("/interfaces/COLCARMEN.png"))); // NOI18N
+
+        jLabel2.setFont(new java.awt.Font("Questions", 3, 48)); // NOI18N
+        jLabel2.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel2.setText("BIENVENIDO");
 
         javax.swing.GroupLayout kGradientPanel4Layout = new javax.swing.GroupLayout(kGradientPanel4);
         kGradientPanel4.setLayout(kGradientPanel4Layout);
         kGradientPanel4Layout.setHorizontalGroup(
             kGradientPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 230, Short.MAX_VALUE)
+            .addGroup(kGradientPanel4Layout.createSequentialGroup()
+                .addGap(61, 61, 61)
+                .addComponent(rSLabelImage11, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, kGradientPanel4Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(rSLabelImage12, javax.swing.GroupLayout.PREFERRED_SIZE, 209, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(17, 17, 17))
+            .addGroup(kGradientPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(kGradientPanel4Layout.createSequentialGroup()
+                    .addGap(16, 16, 16)
+                    .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGap(7, 7, 7)))
         );
         kGradientPanel4Layout.setVerticalGroup(
             kGradientPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 560, Short.MAX_VALUE)
+            .addGroup(kGradientPanel4Layout.createSequentialGroup()
+                .addGap(17, 17, 17)
+                .addComponent(rSLabelImage12, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 347, Short.MAX_VALUE)
+                .addComponent(rSLabelImage11, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+            .addGroup(kGradientPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, kGradientPanel4Layout.createSequentialGroup()
+                    .addContainerGap(261, Short.MAX_VALUE)
+                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(231, 231, 231)))
         );
 
         jPanel6.add(kGradientPanel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 220, 230, 560));
@@ -284,6 +321,21 @@ public class formlogin extends JFrame {
 
         jPanel6.add(panelparticipantes, new org.netbeans.lib.awtextra.AbsoluteConstraints(900, 210, 280, 260));
 
+        jLabel1.setFont(new java.awt.Font("Questions", 3, 36)); // NOI18N
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel1.setText("SOFTWARE DESARROLLADO POR");
+        jPanel6.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(1180, 230, 330, -1));
+
+        labelopciond1.setFont(new java.awt.Font("Segoe UI", 2, 22)); // NOI18N
+        labelopciond1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        labelopciond1.setText("<html><span style=\"text-aling:center\">DOCENTE ING. <br>YILBER JOSE TORO MANOSALVA</span></html>");
+        jPanel6.add(labelopciond1, new org.netbeans.lib.awtextra.AbsoluteConstraints(1180, 300, 340, 80));
+
+        labelopciond2.setFont(new java.awt.Font("Segoe UI", 2, 22)); // NOI18N
+        labelopciond2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        labelopciond2.setText("<html><span style=\"text-aling:center\">DOCENTE ING. <br>LEIDY JOHANNA MEJIA CHOGO</span></html>");
+        jPanel6.add(labelopciond2, new org.netbeans.lib.awtextra.AbsoluteConstraints(1180, 390, 340, 80));
+
         getContentPane().add(jPanel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 1540, 800));
 
         pack();
@@ -297,7 +349,7 @@ public class formlogin extends JFrame {
     }//GEN-LAST:event_boton1ActionPerformed
 
     private void paneljugarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_paneljugarMouseClicked
-        creartorneo objetoTorneo = new creartorneo();
+        cargarJuego objetoTorneo = new cargarJuego();
         // Ocultar el formulario de login al abrir la nueva ventana
         this.setVisible(false);  // Oculta el formlogin actual
 
@@ -381,19 +433,27 @@ public class formlogin extends JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private botones.boton boton1;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel6;
     private keeptoo.KGradientPanel kGradientPanel3;
     private keeptoo.KGradientPanel kGradientPanel4;
+    private javax.swing.JLabel labelopciond;
+    private javax.swing.JLabel labelopciond1;
+    private javax.swing.JLabel labelopciond2;
     private javax.swing.JPanel panelasignaturas;
     private javax.swing.JPanel paneljugar;
     private javax.swing.JPanel panelparticipantes;
     private javax.swing.JPanel panelpreguntas;
     private rojerusan.RSComboMetroBeanInfo rSComboMetroBeanInfo1;
     private rojerusan.RSLabelImage rSLabelImage10;
+    private rojerusan.RSLabelImage rSLabelImage11;
+    private rojerusan.RSLabelImage rSLabelImage12;
     private rojerusan.RSLabelImage rSLabelImage5;
     private rojerusan.RSLabelImage rSLabelImage7;
     private rojerusan.RSLabelImage rSLabelImage8;

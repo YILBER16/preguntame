@@ -4,6 +4,8 @@
  */
 package clases;
 
+import interfaces.cargarJuego;
+import interfaces.creartorneo;
 import interfaces.juegoencurso;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -38,7 +40,8 @@ public class torneo {
     private String color;
     private String representacion;
     private Map<Integer, Integer> filaColorMap = new HashMap<>();
-    
+     private static creartorneo instancia;
+     
     public torneo() {
         
     }
@@ -53,81 +56,6 @@ public class torneo {
     public String toString() {
         return this.nombre; // O el nombre que deseas mostrar en el JComboBox
     }
-    
-    public void iniciarTorneo(JTable tblParticipantes, JComboBox<torneo> comboAsignatura, JComboBox<torneo> comboGrados) {
-        DefaultTableModel model = (DefaultTableModel) tblParticipantes.getModel();
-        torneo asignaturaSeleccionada = (torneo) comboAsignatura.getSelectedItem();
-        int idasignatura = asignaturaSeleccionada.getId();
-        
-        torneo gradoSeleccionado = (torneo) comboGrados.getSelectedItem();
-        int idgrado = gradoSeleccionado.getId();
-        
-        conexionbd objetoConexion = new conexionbd();
-        String sqlTorneo = "INSERT INTO torneo(idasignatura, idgrado, idestadostorneos) VALUES (?, ?, ?);";
-        int idTorneoGenerado = -1; 
-
-        try {
-            CallableStatement cs = objetoConexion.establecerConexion().prepareCall(sqlTorneo);
-            cs.setInt(1, idasignatura);
-            cs.setInt(2, idgrado);
-            cs.setInt(3, 2);
-            cs.execute();
-
-            // Obtener las claves generadas (ID del torneo)
-            ResultSet rs = cs.getGeneratedKeys();
-            if (rs.next()) {
-                idTorneoGenerado = rs.getInt(1);  // Obtener el ID generado
-            }
-
-            // Recorrer cada fila de la tabla
-            for (int i = 0; i < model.getRowCount(); i++) {
-                String idParticipante = (String) model.getValueAt(i, 0);
-                int idColor = (int) model.getValueAt(i, 4);
-
-                String sqlConsulta = "Select idequipo from participantes where id="+idParticipante+"";
-                Statement st;
-                System.out.println("tipo participante "+idParticipante);
-                st = objetoConexion.establecerConexion().createStatement();
-                ResultSet rsConsulta = st.executeQuery(sqlConsulta);
-                int idtipoparticipante = 0;
-                int idequipo = 0;
-                while (rsConsulta.next()) {
-                    
-                   if(rsConsulta.getInt(1) == 1){
-                       idtipoparticipante = 1;
-                   }else{
-                       idtipoparticipante = 2;
-                       idequipo = rsConsulta.getInt(1);
-                   }
-                }
-
-                String sqlParticipantes = "INSERT INTO torneoparticipantes(idtorneo, idtipoparticipante, idparticipante, idequipo, idcolor) VALUES (?, ?, ?, ?, ?);";
-
-                CallableStatement csParticipantes = objetoConexion.establecerConexion().prepareCall(sqlParticipantes);
-                csParticipantes.setInt(1, idTorneoGenerado);
-                csParticipantes.setInt(2, idtipoparticipante);
-                if (idtipoparticipante == 1) {
-                    csParticipantes.setString(3, idParticipante);
-                    csParticipantes.setNull(4, java.sql.Types.INTEGER);
-                } else {
-                    csParticipantes.setNull(3, java.sql.Types.INTEGER); 
-                    csParticipantes.setInt(4, idequipo);
-                }
-                csParticipantes.setInt(5, idColor);
-                csParticipantes.execute();
-            }
-
-            JOptionPane.showMessageDialog(null, "Se inició el torneo con éxito");
-            juegoencurso vistaJuego = new juegoencurso(idTorneoGenerado); // Pasar el ID del torneo si es necesario
-            vistaJuego.setVisible(true); // Mostrar la nueva ventana
-
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Error en la creación del torneo, error: " + e.toString());
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Error inesperado: " + e.toString());
-        }
-    }
-
     
     public void agregarParticipantes(JComboBox<torneo> comboParticipante, JComboBox<torneo> comboTipoTorneo, JTable tblParticipantes, DefaultTableModel modelo, JComboBox<torneo> comboColor) {
         torneo participanteSeleccionado = (torneo) comboParticipante.getSelectedItem();
@@ -421,6 +349,14 @@ public class torneo {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+    
+    public static creartorneo getInstancia() {
+        if (instancia == null || !instancia.isDisplayable()) {
+            instancia = new creartorneo();
+        }
+        instancia.setVisible(true);
+        return instancia;
     }
 
 }
