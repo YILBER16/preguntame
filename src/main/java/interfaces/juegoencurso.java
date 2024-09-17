@@ -4,7 +4,9 @@
  */
 package interfaces;
 
+import clases.conexionbd;
 import clases.juegologica;
+import clases.preguntas;
 import com.panamahitek.ArduinoException;
 import com.panamahitek.PanamaHitek_Arduino;
 import java.awt.Color;
@@ -13,9 +15,14 @@ import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sound.sampled.AudioInputStream;
@@ -25,6 +32,9 @@ import javax.swing.JLabel;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
@@ -49,127 +59,29 @@ public class juegoencurso extends javax.swing.JFrame {
         initComponents();
         
         labelAlerta.setOpaque(false);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // Detener el sonido antes de cerrar la ventana
+                if (reproductorFondo != null) {
+                    reproductorFondo.detener();
+                }
+            }
+        });
+
+        // Configurar otros componentes de la ventana
+        setLocationRelativeTo(null); // Centrar la ventana
        // Agregar un MouseListener para simular el comportamiento de un botón
-        btna.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                // Cambiar el color de fondo cuando el cursor entra
-                btna.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase2.png"))); // Color personalizado
-                btna.setCursor(new Cursor(Cursor.HAND_CURSOR)); // Cambiar cursor a mano
-            }
+        actualizarEstadoBoton(btna, "/botones/buttonbase2.png", "/botones/buttonbase.png", Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        actualizarEstadoBoton(btnb, "/botones/buttonbase3.png", "/botones/buttonbase.png", Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        actualizarEstadoBoton(btnc, "/botones/buttonbase4.png", "/botones/buttonbase.png", Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        actualizarEstadoBoton(btnd, "/botones/buttonbase5.png", "/botones/buttonbase.png", Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                // Restaurar el color de fondo cuando el cursor sale
-                btna.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
-            }
-        });
-        btnb.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                // Cambiar el color de fondo cuando el cursor entra
-                btnb.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase3.png"))); // Color personalizado
-                btnb.setCursor(new Cursor(Cursor.HAND_CURSOR)); // Cambiar cursor a mano
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                // Restaurar el color de fondo cuando el cursor sale
-                btnb.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
-            }
-        });
-        btnc.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                // Cambiar el color de fondo cuando el cursor entra
-                btnc.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase4.png"))); // Color personalizado
-                btnc.setCursor(new Cursor(Cursor.HAND_CURSOR)); // Cambiar cursor a mano
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                // Restaurar el color de fondo cuando el cursor sale
-                btnc.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
-            }
-        });
-        btnd.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                // Cambiar el color de fondo cuando el cursor entra
-                btnd.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase5.png"))); // Color personalizado
-                btnd.setCursor(new Cursor(Cursor.HAND_CURSOR)); // Cambiar cursor a mano
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                // Restaurar el color de fondo cuando el cursor sale
-                btnd.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
-                labelopciond.setForeground(Color.BLACK);
-            }
-        });
-        labelopciona.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                reproductor.cargarSonido("/sonidos/hover.wav");
-                reproductor.reproducir();
-                btna.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase2.png"))); // Color personalizado
-                btna.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                labelopciona.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                // Restaurar el color de fondo cuando el cursor sale
-                btna.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
-            }
-        });
-        labelopcionb.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                // Cambiar el color de fondo cuando el cursor entra
-                reproductor.cargarSonido("/sonidos/hover.wav");
-                reproductor.reproducir();
-                btnb.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase3.png"))); // Color personalizado
-                btnb.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                labelopcionb.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                // Restaurar el color de fondo cuando el cursor sale
-                btnb.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
-            }
-        });
-        labelopcionc.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                // Cambiar el color de fondo cuando el cursor entra
-                reproductor.cargarSonido("/sonidos/hover.wav");
-                reproductor.reproducir();
-                btnc.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase4.png"))); // Color personalizado
-                btnc.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                labelopcionc.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                // Restaurar el color de fondo cuando el cursor sale
-                btnc.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
-            }
-        });
-        labelopciond.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                // Cambiar el color de fondo cuando el cursor entra
-                reproductor.cargarSonido("/sonidos/hover.wav");
-                reproductor.reproducir();
-                btnd.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase5.png"))); // Color personalizado
-                btnd.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                labelopciond.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                // Restaurar el color de fondo cuando el cursor sale
-                btnd.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
-            }
-        });
+        // Etiquetas
+        actualizarEstadoEtiqueta(labelopciona, "/botones/buttonbase2.png", "/botones/buttonbase.png", btna, Cursor.getPredefinedCursor(Cursor.HAND_CURSOR), reproductor);
+        actualizarEstadoEtiqueta(labelopcionb, "/botones/buttonbase3.png", "/botones/buttonbase.png", btnb, Cursor.getPredefinedCursor(Cursor.HAND_CURSOR), reproductor);
+        actualizarEstadoEtiqueta(labelopcionc, "/botones/buttonbase4.png", "/botones/buttonbase.png", btnc, Cursor.getPredefinedCursor(Cursor.HAND_CURSOR), reproductor);
+        actualizarEstadoEtiqueta(labelopciond, "/botones/buttonbase5.png", "/botones/buttonbase.png", btnd, Cursor.getPredefinedCursor(Cursor.HAND_CURSOR), reproductor);
         btnsiguiente.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -181,16 +93,25 @@ public class juegoencurso extends javax.swing.JFrame {
             }
         });
         
-        juego = new juegologica(labelpreguntas, labelopciona, labelopcionb, labelopcionc, labelopciond, btnsiguiente, labelAlerta, lblimgpregunta, idTorneo, this, grupoA, grupoB, grupoC, grupoD, panelClasificacion, nparticipantes1, nparticipantes2, nparticipantes3, nparticipantes4, imgpar1, imgpar2, imgpar3, imgpar4, npuntos1, npuntos2, npuntos3, npuntos4, n1, n2, n3, n4, txtTitulo, nactual, nglobal);
-
-        reproductorFondo.cargarSonido("/sonidos/fondo.wav");
-        reproductorFondo.reproducir();
-        
-//        vVolumen.addChangeListener(e -> {
-//            int valorSlider = vVolumen.getValue();
-//            float volumen = valorSlider / 100f; // Convertir de 0-100 a 0.0-1.0
-//            reproductorFondo.ajustarVolumen(volumen);
-//        });
+        String sqlTorneo = "select * from torneo where id="+idTorneo;
+        Statement st;
+        conexionbd con = new conexionbd();
+        Connection conexion = con.establecerConexion();
+        int idasignatura = 0;
+        int idgrado = 0;
+        try {
+            st = conexion.createStatement();
+            ResultSet rs = st.executeQuery(sqlTorneo);
+            while (rs.next()) {
+                idasignatura = rs.getInt("idasignatura");
+                idgrado = rs.getInt("idgrado");
+            }
+            juego = new juegologica(labelpreguntas, labelopciona, labelopcionb, labelopcionc, labelopciond, btnsiguiente, labelAlerta, lblimgpregunta, idTorneo, this, grupoA, grupoB, grupoC, grupoD, panelClasificacion, nparticipantes1, nparticipantes2, nparticipantes3, nparticipantes4, imgpar1, imgpar2, imgpar3, imgpar4, npuntos1, npuntos2, npuntos3, npuntos4, n1, n2, n3, n4, txtTitulo, nactual, nglobal, idasignatura, idgrado);
+            reproductorFondo.cargarSonido("/sonidos/fondo.wav");
+            reproductorFondo.reproducir();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error: " + e.toString());
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -201,10 +122,11 @@ public class juegoencurso extends javax.swing.JFrame {
         materialShadow1 = new efectos.MaterialShadow();
         rSButtonPaneBeanInfo1 = new rojerusan.RSButtonPaneBeanInfo();
         jPanel6 = new javax.swing.JPanel();
+        labelAlerta = new javax.swing.JLabel();
         panelClasificacion = new javax.swing.JPanel();
+        btnsiguiente = new botones.boton();
         rSLabelImage11 = new rojerusan.RSLabelImage();
         rSLabelImage12 = new rojerusan.RSLabelImage();
-        btnsiguiente = new botones.boton();
         imgpar4 = new javax.swing.JLabel();
         npuntos4 = new javax.swing.JLabel();
         nparticipantes4 = new javax.swing.JLabel();
@@ -228,7 +150,6 @@ public class juegoencurso extends javax.swing.JFrame {
         labelfondo1 = new rojerusan.RSLabelImage();
         fondoClasificacion = new javax.swing.JLabel();
         vVolumen = new javax.swing.JSlider();
-        labelAlerta = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         txtTitulo = new javax.swing.JLabel();
         nglobal = new javax.swing.JLabel();
@@ -267,9 +188,22 @@ public class juegoencurso extends javax.swing.JFrame {
 
         jPanel6.setBackground(new java.awt.Color(255, 255, 255));
         jPanel6.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        jPanel6.add(labelAlerta, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 1540, 800));
 
         panelClasificacion.setOpaque(false);
         panelClasificacion.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        btnsiguiente.setForeground(new java.awt.Color(255, 51, 51));
+        btnsiguiente.setText("Siguiente pregunta");
+        btnsiguiente.setToolTipText("");
+        btnsiguiente.setFocusable(false);
+        btnsiguiente.setFont(new java.awt.Font("Questions", 1, 36)); // NOI18N
+        btnsiguiente.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnsiguienteActionPerformed(evt);
+            }
+        });
+        panelClasificacion.add(btnsiguiente, new org.netbeans.lib.awtextra.AbsoluteConstraints(1200, 730, 310, 60));
 
         rSLabelImage11.setForeground(new java.awt.Color(255, 255, 255));
         rSLabelImage11.setIcon(new javax.swing.ImageIcon(getClass().getResource("/interfaces/COLCARMEN.png"))); // NOI18N
@@ -279,16 +213,7 @@ public class juegoencurso extends javax.swing.JFrame {
         rSLabelImage12.setIcon(new javax.swing.ImageIcon(getClass().getResource("/interfaces/LOGO.jpg"))); // NOI18N
         panelClasificacion.add(rSLabelImage12, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 10, 420, 170));
 
-        btnsiguiente.setForeground(new java.awt.Color(255, 51, 51));
-        btnsiguiente.setText("Siguiente pregunta");
-        btnsiguiente.setToolTipText("");
-        btnsiguiente.setFont(new java.awt.Font("Questions", 1, 36)); // NOI18N
-        btnsiguiente.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnsiguienteActionPerformed(evt);
-            }
-        });
-        panelClasificacion.add(btnsiguiente, new org.netbeans.lib.awtextra.AbsoluteConstraints(1200, 730, 310, 60));
+        imgpar4.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         panelClasificacion.add(imgpar4, new org.netbeans.lib.awtextra.AbsoluteConstraints(610, 690, 350, 80));
 
         npuntos4.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -372,7 +297,6 @@ public class juegoencurso extends javax.swing.JFrame {
         vVolumen.setForeground(new java.awt.Color(255, 51, 51));
         vVolumen.setToolTipText("");
         jPanel6.add(vVolumen, new org.netbeans.lib.awtextra.AbsoluteConstraints(1250, 760, 150, -1));
-        jPanel6.add(labelAlerta, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 1540, 800));
 
         jLabel1.setFont(new java.awt.Font("Questions", 3, 36)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(255, 255, 255));
@@ -617,6 +541,43 @@ public class juegoencurso extends javax.swing.JFrame {
         label.setFont(font);
     }
     
+    // Método para actualizar el estado del botón
+    private void actualizarEstadoBoton(JLabel boton, String iconoEntrar, String iconoSalir, Cursor cursor) {
+        boton.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                boton.setIcon(new ImageIcon(getClass().getResource(iconoEntrar)));
+                boton.setCursor(cursor);
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                boton.setIcon(new ImageIcon(getClass().getResource(iconoSalir)));
+                boton.setCursor(Cursor.getDefaultCursor());
+            }
+        });
+    }
+
+    // Método para actualizar el estado de la etiqueta
+    private void actualizarEstadoEtiqueta(JLabel etiqueta, String iconoEntrar, String iconoSalir, JLabel boton, Cursor cursor, reproducirSonido reproductor) {
+        etiqueta.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                reproductor.cargarSonido("/sonidos/hover.wav");
+                reproductor.reproducir();
+                boton.setIcon(new ImageIcon(getClass().getResource(iconoEntrar)));
+                boton.setCursor(cursor);
+                etiqueta.setCursor(cursor);
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                boton.setIcon(new ImageIcon(getClass().getResource(iconoSalir)));
+                etiqueta.setCursor(Cursor.getDefaultCursor());
+            }
+        });
+    }
+    
     public void iniciarComunicacion() {
         // Listener para manejar los eventos del puerto serial
         SerialPortEventListener listener = new SerialPortEventListener() {
@@ -637,7 +598,6 @@ public class juegoencurso extends javax.swing.JFrame {
                         // Verificar si la respuesta es correcta (idtiporespuesta = 1)
                         if (mensaje.equals("1")) {
                             iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage(getClass().getResource("/alertas/alerta-azul.gif")));
-                            btnd.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase5.png")));
                             reproductor.cargarSonido("/sonidos/soundnotificacion.wav");
                             reproductor.reproducir();
                         }else if (mensaje.equals("2")) {

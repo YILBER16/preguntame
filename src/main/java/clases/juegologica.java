@@ -4,25 +4,35 @@ import interfaces.clasificacionUi;
 import interfaces.imagenespreguntas;
 import interfaces.juegoencurso;
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -49,7 +59,7 @@ public class juegologica {
     private JPanel grupoA, grupoB, grupoC, grupoD, panelClasificacion;
     private String nombreTorneo;
     private int nPreguntasTorneo;
-    private int npreguntaRespondidas;
+    private int npreguntaRespondidas, idasignatura, idgrado;
     public void botonPresionar(String mensaje) {
         // Aquí puedes procesar el mensaje como quieras
         System.out.println("Mensaje recibido en logicaJuego: " + mensaje);
@@ -57,7 +67,7 @@ public class juegologica {
         // Lógica adicional con el mensaje
     }
     
-    public juegologica(JLabel labelpreguntas, JLabel labelopciona, JLabel labelopcionb, JLabel labelopcionc, JLabel labelopciond, JButton btnsiguiente, JLabel labelalerta, JLabel lblimgpregunta, int idTorneo, juegoencurso juegoencurso, JPanel grupoA, JPanel grupoB, JPanel grupoC, JPanel grupoD, JPanel panelClasificacion, JLabel nparticipantes1, JLabel nparticipantes2, JLabel nparticipantes3, JLabel nparticipantes4, JLabel imgpar1, JLabel imgpar2, JLabel imgpar3, JLabel imgpar4, JLabel npuntos1, JLabel npuntos2, JLabel npuntos3, JLabel npuntos4, JLabel n1, JLabel n2, JLabel n3, JLabel n4, JLabel txtTitulo, JLabel nactual, JLabel nglobal) {
+    public juegologica(JLabel labelpreguntas, JLabel labelopciona, JLabel labelopcionb, JLabel labelopcionc, JLabel labelopciond, JButton btnsiguiente, JLabel labelalerta, JLabel lblimgpregunta, int idTorneo, juegoencurso juegoencurso, JPanel grupoA, JPanel grupoB, JPanel grupoC, JPanel grupoD, JPanel panelClasificacion, JLabel nparticipantes1, JLabel nparticipantes2, JLabel nparticipantes3, JLabel nparticipantes4, JLabel imgpar1, JLabel imgpar2, JLabel imgpar3, JLabel imgpar4, JLabel npuntos1, JLabel npuntos2, JLabel npuntos3, JLabel npuntos4, JLabel n1, JLabel n2, JLabel n3, JLabel n4, JLabel txtTitulo, JLabel nactual, JLabel nglobal, int idasignatura,int idgrado) {
         
         this.labelpreguntas = labelpreguntas;
         this.labelopciona = labelopciona;
@@ -92,9 +102,12 @@ public class juegologica {
         this.nglobal = nglobal;
         this.txtTitulo = txtTitulo;
         this.torneoID = idTorneo;
+        this.idasignatura = idasignatura;
+        this.idgrado = idgrado;
         this.botonPresionado = "0";
         this.juegoencurso = juegoencurso;
         panelClasificacion.setVisible(false);
+
         // Asignar acción al botón Siguiente
         btnsiguiente.addActionListener(new ActionListener() {
             @Override
@@ -107,43 +120,59 @@ public class juegologica {
         labelopciona.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (botonPresionado != "0") {
-                    verificarRespuesta(labelopciona, labelalerta, idTorneo, botonPresionado, grupoA, panelClasificacion);
-                }else{
-                    JOptionPane.showMessageDialog(null, "Ningún botón ha sido presionado.", "Alerta", JOptionPane.WARNING_MESSAGE);
+                int confirm = JOptionPane.showConfirmDialog(null, "¿Estás seguro de que deseas seleccionar esta respuesta?", "Confirmación", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    if (!"0".equals(botonPresionado)) { // Usar equals() para comparar cadenas
+                        verificarRespuesta(labelopciona, labelalerta, idTorneo, botonPresionado, grupoA, panelClasificacion);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Ningún botón ha sido presionado.", "Alerta", JOptionPane.WARNING_MESSAGE);
+                    }
                 }
             }
         });
+
         labelopcionb.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (botonPresionado != "0") {
-                    verificarRespuesta(labelopcionb, labelalerta, idTorneo, botonPresionado, grupoB, panelClasificacion);
-                }else{
-                    JOptionPane.showMessageDialog(null, "Ningún botón ha sido presionado.", "Alerta", JOptionPane.WARNING_MESSAGE);
+                int confirm = JOptionPane.showConfirmDialog(null, "¿Estás seguro de que deseas seleccionar esta respuesta?", "Confirmación", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    if (!"0".equals(botonPresionado)) {
+                        verificarRespuesta(labelopcionb, labelalerta, idTorneo, botonPresionado, grupoB, panelClasificacion);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Ningún botón ha sido presionado.", "Alerta", JOptionPane.WARNING_MESSAGE);
+                    }
                 }
             }
         });
+
         labelopcionc.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (botonPresionado != "0") {
-                    verificarRespuesta(labelopcionc, labelalerta, idTorneo, botonPresionado, grupoC, panelClasificacion);
-                }else{
-                    JOptionPane.showMessageDialog(null, "Ningún botón ha sido presionado.", "Alerta", JOptionPane.WARNING_MESSAGE);
+                int confirm = JOptionPane.showConfirmDialog(null, "¿Estás seguro de que deseas seleccionar esta respuesta?", "Confirmación", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    if (!"0".equals(botonPresionado)) {
+                        verificarRespuesta(labelopcionc, labelalerta, idTorneo, botonPresionado, grupoC, panelClasificacion);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Ningún botón ha sido presionado.", "Alerta", JOptionPane.WARNING_MESSAGE);
+                    }
                 }
             }
         });
+
         labelopciond.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (botonPresionado != "0") {
-                    verificarRespuesta(labelopciond, labelalerta, idTorneo, botonPresionado, grupoD, panelClasificacion);
-                }else{
-                    JOptionPane.showMessageDialog(null, "Ningún botón ha sido presionado.", "Alerta", JOptionPane.WARNING_MESSAGE);
+                int confirm = JOptionPane.showConfirmDialog(null, "¿Estás seguro de que deseas seleccionar esta respuesta?", "Confirmación", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    if (!"0".equals(botonPresionado)) {
+                        verificarRespuesta(labelopciond, labelalerta, idTorneo, botonPresionado, grupoD, panelClasificacion);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Ningún botón ha sido presionado.", "Alerta", JOptionPane.WARNING_MESSAGE);
+                    }
                 }
             }
         });
+
         
         String sqlInformacion = "SELECT * "
                             + "FROM torneo t "
@@ -171,69 +200,74 @@ public class juegologica {
     private List<Pregunta> cargarPreguntasDesdeBD(int idTorneo) {
         List<Pregunta> preguntas = new ArrayList<>();
 
-        // Consulta para obtener las preguntas
-        String sqlPreguntas = "SELECT id, pregunta, imagen "
-                            + "FROM preguntas p "
-                            + "WHERE p.idgrado = ? AND p.idasignatura = ? "
-                            + "AND NOT EXISTS (SELECT 1 FROM preguntas_respondidas pr "
-                            + "WHERE pr.idtorneo = ? AND pr.idpregunta = p.id)";
+        String sqlPreguntas = "SELECT id, pregunta, imagen FROM preguntas p "
+                              + "WHERE p.idgrado = ? AND p.idasignatura = ? "
+                              + "AND NOT EXISTS (SELECT 1 FROM preguntas_respondidas pr "
+                              + "WHERE pr.idtorneo = ? AND pr.idpregunta = p.id)";
 
-        // Consulta para obtener las respuestas asociadas a una pregunta
         String sqlRespuestas = "SELECT idpregunta, respuesta, idtiporespuesta, imagen "
-                             + "FROM respuestas "
-                             + "WHERE idpregunta = ?";
+                               + "FROM respuestas "
+                               + "WHERE idpregunta = ?";
 
         try {
             conexionbd objetoConexion = new conexionbd();
-            PreparedStatement psPreguntas = objetoConexion.establecerConexion().prepareStatement(sqlPreguntas);
-            psPreguntas.setInt(1, 2); // Parámetro del grado
-            psPreguntas.setInt(2, 3); // Parámetro de la asignatura
-            psPreguntas.setInt(3, idTorneo); // Excluir las preguntas ya respondidas en este torneo
+            Connection conexion = objetoConexion.establecerConexion();
+
+            PreparedStatement psPreguntas = conexion.prepareStatement(sqlPreguntas);
+            psPreguntas.setInt(1, idgrado);
+            psPreguntas.setInt(2, idasignatura);
+            psPreguntas.setInt(3, idTorneo);
             ResultSet rsPreguntas = psPreguntas.executeQuery();
 
             while (rsPreguntas.next()) {
                 int idPregunta = rsPreguntas.getInt("id");
                 String textoPregunta = rsPreguntas.getString("pregunta");
-                String rutaImagenPregunta = rsPreguntas.getString("imagen");
+
+                Blob blobImagenPregunta = rsPreguntas.getBlob("imagen");
+                byte[] imagenPregunta = null;
+                if (blobImagenPregunta != null) {
+                    imagenPregunta = blobImagenPregunta.getBytes(1, (int) blobImagenPregunta.length());
+                }
+
                 // Obtener las respuestas para la pregunta actual
-                PreparedStatement psRespuestas = objetoConexion.establecerConexion().prepareStatement(sqlRespuestas);
+                PreparedStatement psRespuestas = conexion.prepareStatement(sqlRespuestas);
                 psRespuestas.setInt(1, idPregunta);
                 ResultSet rsRespuestas = psRespuestas.executeQuery();
 
-                List<String> opciones = new ArrayList<>();
+                // Crear una lista para almacenar respuestas
+                List<Respuesta> respuestas = new ArrayList<>();
                 List<Integer> idTipoRespuestas = new ArrayList<>();
-                String vimagen = "";
                 while (rsRespuestas.next()) {
-                    String respuesta;
-                    String vRespuesta = rsRespuestas.getString("respuesta");
-                    if(!vRespuesta.trim().isEmpty()){
-                        respuesta = rsRespuestas.getString("respuesta");
-                        vimagen = "0";
-                    }else{
-                        respuesta = rsRespuestas.getString("imagen");
-                        vimagen = "1";
+                    String textoRespuesta = rsRespuestas.getString("respuesta");
+                    byte[] imagenRespuesta = rsRespuestas.getBytes("imagen");
+
+                    if (imagenRespuesta != null && imagenRespuesta.length > 0) {
+                        respuestas.add(new Respuesta(null, imagenRespuesta));
+                    } else {
+                        respuestas.add(new Respuesta(textoRespuesta, null));
                     }
-                    opciones.add(respuesta);
-                     // Agregar el idtiporespuesta a la lista
                     int idTipoRespuesta = rsRespuestas.getInt("idtiporespuesta");
                     idTipoRespuestas.add(idTipoRespuesta);
                 }
-                opciones.add(vimagen);
-                // Asegurarse de tener exactamente 4 opciones, llenando con opciones vacías si es necesario
-                while (opciones.size() < 4) {
-                    opciones.add("");
-                     idTipoRespuestas.add(0);
+
+                // Asegurarse de que la lista tenga exactamente 4 respuestas
+                while (respuestas.size() < 4) {
+                    respuestas.add(new Respuesta("", null));
                 }
 
-                // Crear el objeto Pregunta con las respuestas
-                Pregunta pregunta = new Pregunta(idPregunta, textoPregunta, rutaImagenPregunta, opciones.get(0), opciones.get(1), opciones.get(2), opciones.get(3), opciones.get(4), idTipoRespuestas.get(0), idTipoRespuestas.get(1), idTipoRespuestas.get(2), idTipoRespuestas.get(3));
+                Pregunta pregunta = new Pregunta(
+                    idPregunta, 
+                    textoPregunta, 
+                    respuestas, 
+                    imagenPregunta,
+                    idTipoRespuestas.get(0), idTipoRespuestas.get(1), idTipoRespuestas.get(2), idTipoRespuestas.get(3)
+                );
                 preguntas.add(pregunta);
             }
 
             if (preguntas.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "No hay más preguntas disponibles.");
             } else {
-                // Barajar las preguntas (opcional)
                 Collections.shuffle(preguntas);
             }
         } catch (SQLException e) {
@@ -243,95 +277,79 @@ public class juegologica {
         return preguntas;
     }
 
-    // Método para mostrar la siguiente pregunta
+
     public void mostrarSiguientePregunta(int idTorneo) {
         grupoA.setVisible(true);
         grupoB.setVisible(true);
         grupoC.setVisible(true);
         grupoD.setVisible(true);
+
         String sqlPreguntasRespondidas = "SELECT COUNT(*) FROM preguntas_respondidas WHERE idtorneo = ?";
         try {
-            
             conexionbd objetoConexion = new conexionbd();
             PreparedStatement psPreguntasRespondidas = objetoConexion.establecerConexion().prepareStatement(sqlPreguntasRespondidas);
             psPreguntasRespondidas.setInt(1, idTorneo);
             ResultSet rsPreguntasRespondidas = psPreguntasRespondidas.executeQuery();
-            
+
             if (rsPreguntasRespondidas.next()) {
                 npreguntaRespondidas = rsPreguntasRespondidas.getInt(1);
             }
-
             if (indicePreguntaActual < listaPreguntas.size()) {
-                System.out.println(npreguntaRespondidas + " "+nPreguntasTorneo);
                 if(npreguntaRespondidas<nPreguntasTorneo){
                     Pregunta preguntaActual = listaPreguntas.get(indicePreguntaActual);
-                    // Mostrar la pregunta y las opciones en los JLabels
-                    labelpreguntas.setText(preguntaActual.getTexto());
-                    labelopciona.setText(preguntaActual.getOpcionA());
-                    labelopcionb.setText(preguntaActual.getOpcionB());
-                    labelopcionc.setText(preguntaActual.getOpcionC());
-                    labelopciond.setText(preguntaActual.getOpcionD());
-                    ajustarTextoTitulo(labelpreguntas, preguntaActual.getTexto());
-                    String rutaImagenPregunta = "";
-                    ImageIcon iconoPregunta = null;
-                    if(!preguntaActual.getImagenPregunta().isEmpty()){
-                        rutaImagenPregunta = "src/main/resources"+preguntaActual.getImagenPregunta();
-                        iconoPregunta = new ImageIcon(rutaImagenPregunta);
-                    }else{
-                        iconoPregunta = new ImageIcon(getClass().getResource("/interfaces/logo.png"));                    }
-                        lblimgpregunta.setIcon(iconoPregunta);
-                        System.out.println("Imagen pregunta: "+preguntaActual.getImagenPregunta());
-                     // Eliminar MouseListeners anteriores
-                    for (MouseListener ml : lblimgpregunta.getMouseListeners()) {
-                        lblimgpregunta.removeMouseListener(ml);
-                    }
-                    lblimgpregunta.addMouseListener(new MouseAdapter() {
-                        @Override
-                        public void mouseClicked(MouseEvent e) {
-                            // Crear una instancia de imagenespreguntas con la ruta de la imagen
-                            String rutaImagenPregunta = "src/main/resources" + preguntaActual.getImagenPregunta();
-                            imagenespreguntas ventanaImagen = new imagenespreguntas(rutaImagenPregunta);
-                            ventanaImagen.setVisible(true); // Mostrar la ventana
-                        }
-                    });
-                    // Limpiar los textos
-                    labelopciona.setText(null);
-                    labelopcionb.setText(null);
-                    labelopcionc.setText(null);
-                    labelopciond.setText(null);
 
+                    // Limpiar los JLabel y otros componentes
+                    labelpreguntas.setText("");
+                    lblimgpregunta.setIcon(null);
                     labelopciona.setIcon(null);
                     labelopcionb.setIcon(null);
                     labelopcionc.setIcon(null);
                     labelopciond.setIcon(null);
+                    labelopciona.setText("");
+                    labelopcionb.setText("");
+                    labelopcionc.setText("");
+                    labelopciond.setText("");
 
-                    if(preguntaActual.getVImagen().equals("0")) {
-
-                        ajustarTextoLabel(labelopciona, preguntaActual.getOpcionA());
-                        ajustarTextoLabel(labelopcionb, preguntaActual.getOpcionB());
-                        ajustarTextoLabel(labelopcionc, preguntaActual.getOpcionC());
-                        ajustarTextoLabel(labelopciond, preguntaActual.getOpcionD());
-
-                    }else{
-                        // Caso con imágenes
-                        ajustarImagenEnLabel(labelopciona, "src/main/resources" + preguntaActual.getOpcionA());
-                        ajustarImagenEnLabel(labelopcionb, "src/main/resources" + preguntaActual.getOpcionB());
-                        ajustarImagenEnLabel(labelopcionc, "src/main/resources" + preguntaActual.getOpcionC());
-                        ajustarImagenEnLabel(labelopciond, "src/main/resources" + preguntaActual.getOpcionD());
-
+                    // Asegurarse de que no haya listeners de mouse anteriores
+                    for (MouseListener ml : lblimgpregunta.getMouseListeners()) {
+                        lblimgpregunta.removeMouseListener(ml);
                     }
+
+                    // Mostrar la pregunta
+                    labelpreguntas.setText(preguntaActual.getTexto());
+                    ajustarTextoTitulo(labelpreguntas, preguntaActual.getTexto());
+
+                    // Cargar y mostrar la imagen de la pregunta si existe
+                    byte[] imagenPregunta = preguntaActual.getImagenPregunta();
+                    mostrarImagen(lblimgpregunta, imagenPregunta, "/interfaces/logo.png");
+
+                    // Configurar el listener para la imagen de la pregunta
+                    lblimgpregunta.addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                            // Crear una instancia de imagenespreguntas con el byte[] de la imagen
+                            byte[] imagenPregunta = preguntaActual.getImagenPregunta();
+                            imagenespreguntas ventanaImagen = new imagenespreguntas(imagenPregunta);
+                            ventanaImagen.setVisible(true); // Mostrar la ventana
+                        }
+                    });
+
+                    // Mostrar las opciones según si son imágenes o texto
+                    List<Respuesta> respuestas = preguntaActual.getRespuestas();
+                    mostrarOpcion(labelopciona, respuestas.size() > 0 ? respuestas.get(0) : null);
+                    mostrarOpcion(labelopcionb, respuestas.size() > 1 ? respuestas.get(1) : null);
+                    mostrarOpcion(labelopcionc, respuestas.size() > 2 ? respuestas.get(2) : null);
+                    mostrarOpcion(labelopciond, respuestas.size() > 3 ? respuestas.get(3) : null);
                     labelopciona.putClientProperty("idtiporespuesta", preguntaActual.getIdTipoRespuestaA());
                     labelopcionb.putClientProperty("idtiporespuesta", preguntaActual.getIdTipoRespuestaB());
                     labelopcionc.putClientProperty("idtiporespuesta", preguntaActual.getIdTipoRespuestaC());
                     labelopciond.putClientProperty("idtiporespuesta", preguntaActual.getIdTipoRespuestaD());
-                    // Registrar la pregunta como respondida en la tabla preguntas_respondidas
-                    //registrarPreguntaRespondida(idTorneo, preguntaActual.getId());
 
-                    // Incrementar el índice para la próxima pregunta
                     nactual.setText("" + (npreguntaRespondidas + 1));
                     npreguntaRespondidas++;
+                    // Incrementar el índice para la próxima pregunta
                     indicePreguntaActual++;
-                    panelClasificacion.setVisible(false);    
+                    panelClasificacion.setVisible(false);
                 }else {
                     JOptionPane.showMessageDialog(null, "Torneo terminado.");
                 }
@@ -342,6 +360,36 @@ public class juegologica {
             JOptionPane.showMessageDialog(null, "Error al contar las preguntas respondidas: " + e.getMessage());
         }
     }
+
+
+    private void mostrarOpcion(JLabel label, Respuesta respuesta) {
+        if (respuesta == null) {
+            label.setText("");
+            label.setIcon(null);
+        } else if (respuesta.getImagen() != null && respuesta.getImagen().length > 0) {
+            mostrarImagen(label, respuesta.getImagen(), "/interfaces/logo.png");
+        } else {
+            ajustarTextoLabel(label, respuesta.getTexto());
+        }
+    }
+
+
+    private void mostrarImagen(JLabel label, byte[] imagen, String imagenPorDefecto) {
+        ImageIcon icono = null;
+        if (imagen != null && imagen.length > 0) {
+            try {
+                InputStream inputStream = new ByteArrayInputStream(imagen);
+                BufferedImage bufferedImage = ImageIO.read(inputStream);
+                icono = new ImageIcon(bufferedImage);
+            } catch (IOException e) {
+                icono = new ImageIcon(getClass().getResource(imagenPorDefecto));
+            }
+        } else {
+            icono = new ImageIcon(getClass().getResource(imagenPorDefecto));
+        }
+        label.setIcon(icono);
+    }
+
 
     // Método para registrar la pregunta respondida
     public void registrarPreguntaRespondida(int idTorneo, int idPregunta) {
@@ -497,7 +545,7 @@ public class juegologica {
                 idPreguntaActual = preguntaActual.getId();
                 intentosIncorrectos = 0;
             }
-
+            System.out.println("Respuesta: "+idTipoRespuestaSeleccionada);
             if (idTipoRespuestaSeleccionada != null && idTipoRespuestaSeleccionada.equals(1)) {
                 // Respuesta correcta
                 intentosIncorrectos = 0; // Reiniciar los intentos si la respuesta es correcta
@@ -641,13 +689,12 @@ public class juegologica {
     }
     
     public void consultarClasificacion(int idtorneo, JLabel nparticipantes1, JLabel nparticipantes2, JLabel nparticipantes3, JLabel nparticipantes4, JLabel imgpar1, JLabel imgpar2, JLabel imgpar3, JLabel imgpar4, JLabel npuntos1, JLabel npuntos2, JLabel npuntos3, JLabel npuntos4, JLabel n1, JLabel n2, JLabel n3, JLabel n4) {
-        // Consulta SQL para obtener participantes ordenados por puntaje
         String sql = "SELECT tp.idtipoparticipante, tp.idequipo, tp.idparticipante, tp.puntaje, c.representacion " +
                      "FROM torneoparticipantes tp " +
-                     "JOIN colores c on (c.id = tp.idcolor) " +
+                     "JOIN colores c ON c.id = tp.idcolor " +
                      "WHERE tp.idtorneo = ? " +
                      "ORDER BY tp.puntaje DESC";
-
+        String color = "000000";
         try (Connection conexion = new conexionbd().establecerConexion();
              PreparedStatement pst = conexion.prepareStatement(sql)) {
 
@@ -660,122 +707,111 @@ public class juegologica {
                     int idEquipo = rs.getInt("idequipo");
                     int idParticipante = rs.getInt("idparticipante");
                     double puntaje = rs.getDouble("puntaje");
-                    String color = rs.getString("representacion");
+                    color = rs.getString("representacion");
 
                     if (idTipoParticipante == 2) { // Si es un equipo
-                        // Consultar el nombre del equipo y la ruta de las imágenes
-                        String sqlEquipo = "SELECT e.equipo, p.imagen " +
-                                           "FROM participantes p " +
-                                           "JOIN equipos e ON p.idequipo = e.id " +
-                                           "WHERE e.id = ?";
-                        StringBuilder htmlEquipo = new StringBuilder();
-                        htmlEquipo.append("<html>");
-                        String nombreEquipo = "";
-
+                        String sqlEquipo = "SELECT e.equipo, p.foto " +
+                                            "FROM participantes p " +
+                                            "JOIN equipos e ON p.idequipo = e.id " +
+                                            "WHERE e.id = ?";
+                        String nombre = "";
                         try (PreparedStatement pstEquipo = conexion.prepareStatement(sqlEquipo)) {
                             pstEquipo.setInt(1, idEquipo);
+
                             try (ResultSet rsEquipo = pstEquipo.executeQuery()) {
-
-                                htmlEquipo.append("<div style='display: flex; align-items: center; justify-content: center'>"); // Usar flexbox para alinear las imágenes
-
+                                List<Blob> blobs = new ArrayList<>();
                                 while (rsEquipo.next()) {
-                                    if (nombreEquipo.isEmpty()) {
-                                        nombreEquipo = "<html><font color='#" + color + "' face='Arial' size='6'>"+rsEquipo.getString("equipo")+"</font></html>";
-                                    }
-                                    String rutaImagenMiembro = "src/main/resources/" + rsEquipo.getString("imagen");
-
-                                    // Crear un ImageIcon para la imagen del equipo y redimensionarla
-                                    ImageIcon originalIcon = new ImageIcon(rutaImagenMiembro);
-                                    Image img = originalIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
-                                    ImageIcon iconoRedimensionado = new ImageIcon(img);
-
-                                    htmlEquipo.append(String.format("<img src='file:%s' width='100' height='100' style='margin-right:5px;'/>", rutaImagenMiembro));
+                                    Blob blobImagen = rsEquipo.getBlob("foto");
+                                    nombre = rsEquipo.getString("equipo");
+                                    blobs.add(blobImagen);
                                 }
-                                htmlEquipo.append(String.format("</div></html>"));
+
+                                ImageIcon imagenIcono = combineImages(blobs.toArray(new Blob[0]), 80, 80); // Redimensionar a 200x200px
+                                if (imagenIcono == null) {
+                                    System.out.println("Imágenes del equipo no se pudieron combinar.");
+                                }
+
+                                String nombreEquipo = "<html><font color='#" + color + "' face='Arial' size='6'>" + nombre + "</font></html>";
+                                String puntajeText = "<html><div style='text-align: center;'>" +
+                                                     "<font color='#" + color + "' face='Arial' size='6'>" +
+                                                     puntaje + "<br> Puntos" +
+                                                     "</font></div></html>";
+
+                                switch (puesto) {
+                                    case 1:
+                                        n1.setForeground(Color.decode("#" + color));
+                                        nparticipantes1.setText(nombreEquipo);
+                                        imgpar1.setIcon(imagenIcono); // Mostrar imagen combinada en JLabel
+                                        npuntos1.setText(puntajeText);
+                                        break;
+                                    case 2:
+                                        n2.setForeground(Color.decode("#" + color));
+                                        nparticipantes2.setText(nombreEquipo);
+                                        imgpar2.setIcon(imagenIcono);
+                                        npuntos2.setText(puntajeText);
+                                        break;
+                                    case 3:
+                                        n3.setForeground(Color.decode("#" + color));
+                                        nparticipantes3.setText(nombreEquipo);
+                                        imgpar3.setIcon(imagenIcono);
+                                        npuntos3.setText(puntajeText);
+                                        break;
+                                    case 4:
+                                        n4.setForeground(Color.decode("#" + color));
+                                        nparticipantes4.setText(nombreEquipo);
+                                        imgpar4.setIcon(imagenIcono);
+                                        npuntos4.setText(puntajeText);
+                                        break;
+                                }
                             }
+                        } catch (SQLException e) {
+                            e.printStackTrace();
                         }
-                        String puntajeText = "<html><div style='text-align: center;'>" +
-                         "<font color='#" + color + "' face='Arial' size='6'>" +
-                         puntaje + "<br> Puntos" +
-                         "</font></div></html>";
-                        // Asignar el HTML y la imagen a los JLabel correspondientes
-                        switch (puesto) {
-                            case 1:
-                                n1.setForeground(Color.decode("#"+color));
-                                nparticipantes1.setText(nombreEquipo);
-                                imgpar1.setText(htmlEquipo.toString()); // Mostrar HTML en JLabel para imágenes del equipo
-                                npuntos1.setText(puntajeText);
-                                break;
-                            case 2:
-                                n2.setForeground(Color.decode("#"+color));
-                                nparticipantes2.setText(nombreEquipo);
-                                imgpar2.setText(htmlEquipo.toString());
-                                npuntos2.setText(puntajeText);
-                                break;
-                            case 3:
-                                n3.setForeground(Color.decode("#"+color));
-                                nparticipantes3.setText(nombreEquipo);
-                                imgpar3.setText(htmlEquipo.toString());
-                                npuntos3.setText(puntajeText);
-                                break;
-                            case 4:
-                                n4.setForeground(Color.decode("#"+color));
-                                nparticipantes4.setText(nombreEquipo);
-                                imgpar4.setText(htmlEquipo.toString());
-                                npuntos4.setText(puntajeText);
-                                break;
-                        }
-                    } else { // Si es un participante individual
-                        String sqlParticipante = "SELECT CONCAT(p.nombres, ' ', p.apellidos) as nombres, p.imagen " +
+                    }else { // Si es un participante individual
+                        String sqlParticipante = "SELECT CONCAT(p.nombres, ' ', p.apellidos) AS nombres, p.foto " +
                                                  "FROM participantes p " +
                                                  "WHERE p.id = ?";
                         try (PreparedStatement pstParticipante = conexion.prepareStatement(sqlParticipante)) {
                             pstParticipante.setInt(1, idParticipante);
                             try (ResultSet rsParticipante = pstParticipante.executeQuery()) {
                                 String nombre;
-                                String rutaImagen;
                                 ImageIcon imagenIcono = null;
 
                                 if (rsParticipante.next()) {
                                     nombre = rsParticipante.getString("nombres");
-                                    rutaImagen = "src/main/resources/" + rsParticipante.getString("imagen");
-                                    ImageIcon originalIcon = new ImageIcon(rutaImagen);
-                                    Image img = originalIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
-                                    imagenIcono = new ImageIcon(img);
+                                    Blob blobImagen = rsParticipante.getBlob("foto");
+                                    imagenIcono = blobToImageIcon(blobImagen, 80); // Redimensionar imagen a 80px de ancho
                                 } else {
                                     nombre = "Participante Desconocido";
-                                    rutaImagen = "";
                                 }
 
-                                // Crear HTML para el participante individual
-                                String htmlParticipante = String.format("<html><font color='#" + color + "' face='Arial' size='5'>%s</font><br></html>",
-                                                                        nombre);
+                                String htmlParticipante = String.format("<html><font color='#" + color + "' face='Arial' size='5'>%s</font><br></html>", nombre);
                                 String puntajeText = "<html><div style='text-align: center;'>" +
-                                "<font color='#" + color + "' face='Arial' size='6'>" +
-                                puntaje + "<br> Puntos" +
-                                "</font></div></html>";
-                                // Asignar el HTML y la imagen a los JLabel correspondientes
+                                                     "<font color='#" + color + "' face='Arial' size='6'>" +
+                                                     puntaje + "<br> Puntos" +
+                                                     "</font></div></html>";
+
                                 switch (puesto) {
                                     case 1:
-                                        n1.setForeground(Color.decode("#"+color));
+                                        n1.setForeground(Color.decode("#" + color));
                                         nparticipantes1.setText(htmlParticipante);
                                         imgpar1.setIcon(imagenIcono);
                                         npuntos1.setText(puntajeText);
                                         break;
                                     case 2:
-                                        n2.setForeground(Color.decode("#"+color));
+                                        n2.setForeground(Color.decode("#" + color));
                                         nparticipantes2.setText(htmlParticipante);
                                         imgpar2.setIcon(imagenIcono);
                                         npuntos2.setText(puntajeText);
                                         break;
                                     case 3:
-                                        n3.setForeground(Color.decode("#"+color));
+                                        n3.setForeground(Color.decode("#" + color));
                                         nparticipantes3.setText(htmlParticipante);
                                         imgpar3.setIcon(imagenIcono);
                                         npuntos3.setText(puntajeText);
                                         break;
                                     case 4:
-                                        n4.setForeground(Color.decode("#"+color));
+                                        n4.setForeground(Color.decode("#" + color));
                                         nparticipantes4.setText(htmlParticipante);
                                         imgpar4.setIcon(imagenIcono);
                                         npuntos4.setText(puntajeText);
@@ -788,7 +824,6 @@ public class juegologica {
                     puesto++;
                 }
 
-                // Rellenar los JLabel restantes si hay menos de 4 participantes
                 while (puesto <= 4) {
                     JLabel labelTexto;
                     JLabel labelImagen;
@@ -817,42 +852,141 @@ public class juegologica {
                     }
 
                     if (labelTexto != null) {
-                        labelTexto.setText(String.format("<html><font color='#FF0000' face='Arial' size='4'>%d. - Sin participación</font></html>", puesto));
-                        labelImagen.setIcon(null); // Sin imagen
+                        labelTexto.setText("<html><font color='#" + color + "' face='Arial' size='6'>---</font></html>");
+                        if (labelImagen != null) {
+                            labelImagen.setIcon(null); // Limpiar la imagen
+                        }
                     }
 
                     puesto++;
                 }
+                if(nPreguntasTorneo == npreguntaRespondidas){
+                    reproductor = new reproducirSonido();
+                    reproductor.cargarSonido("/sonidos/victoria.wav");
+                    reproductor.reproducir();
+                    btnsiguiente.setVisible(false);
+                }
                 panelClasificacion.setVisible(true);
             }
-
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
+
+    public static ImageIcon combineImages(Blob[] images, int imageWidth, int imageHeight) {
+        try {
+            BufferedImage[] resizedImages = new BufferedImage[images.length];
+            int totalWidth = 0;
+            int maxHeight = imageHeight; // La altura será constante
+
+            // Redimensionar cada imagen y calcular el ancho total
+            for (int i = 0; i < images.length; i++) {
+                InputStream inputStream = images[i].getBinaryStream();
+                BufferedImage originalImage = ImageIO.read(inputStream);
+                BufferedImage resizedImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g2d = resizedImage.createGraphics();
+                g2d.drawImage(originalImage.getScaledInstance(imageWidth, imageHeight, Image.SCALE_SMOOTH), 0, 0, null);
+                g2d.dispose();
+                resizedImages[i] = resizedImage;
+                totalWidth += resizedImage.getWidth();
+            }
+
+            // Crear una imagen de salida
+            BufferedImage combinedImage = new BufferedImage(totalWidth, maxHeight, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = combinedImage.createGraphics();
+
+            // Dibujar cada imagen en la imagen de salida de manera horizontal
+            int xOffset = 0;
+            for (BufferedImage img : resizedImages) {
+                g.drawImage(img, xOffset, 0, null);
+                xOffset += img.getWidth();
+            }
+            g.dispose();
+
+            // Convertir BufferedImage a ImageIcon
+            return new ImageIcon(combinedImage);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    // Método auxiliar para convertir un Blob en ImageIcon y redimensionar la imagen
+    private ImageIcon blobToImageIcon(Blob blob, int ancho) {
+        if (blob == null) {
+            return null;
+        }
+        try {
+            InputStream inputStream = blob.getBinaryStream();
+            BufferedImage bufferedImage = ImageIO.read(inputStream);
+            if (bufferedImage == null) {
+                return null;
+            }
+            BufferedImage imagenRedimensionada = redimensionarImagen(bufferedImage, ancho);
+            return new ImageIcon(imagenRedimensionada);
+        } catch (IOException | SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    // Método para redimensionar la imagen manteniendo la proporción
+    private BufferedImage redimensionarImagen(BufferedImage imagen, int ancho) {
+        int alto = (int) Math.round(((double) ancho / imagen.getWidth()) * imagen.getHeight());
+        Image imagenEscalada = imagen.getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
+        BufferedImage imagenRedimensionada = new BufferedImage(ancho, alto, BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D g2d = imagenRedimensionada.createGraphics();
+        // Configurar RenderingHints para mejorar la calidad del escalado
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.drawImage(imagenEscalada, 0, 0, null);
+        g2d.dispose();
+
+        return imagenRedimensionada;
+    }
+
+
+    private String encodeToBase64(ImageIcon imageIcon) {
+        if (imageIcon == null) {
+            return "";
+        }
+        BufferedImage bufferedImage = (BufferedImage) imageIcon.getImage();
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            ImageIO.write(bufferedImage, "png", baos);
+            byte[] imageBytes = baos.toByteArray();
+            return Base64.getEncoder().encodeToString(imageBytes);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+    
+    
+
 
 }
 
 class Pregunta {
     private int id;
-    private String texto, imagenPregunta;
-    private String opcionA, opcionB, opcionC, opcionD, vimagen;
+    private String texto;
+    private List<Respuesta> respuestas;
+    private byte[] imagen; // Imagen en formato byte[]
     private int idTipoRespuestaA;
     private int idTipoRespuestaB;
     private int idTipoRespuestaC;
     private int idTipoRespuestaD;
-
+    
     // Constructor de la clase
-    public Pregunta(int id, String texto, String imagenPregunta, String opcionA, String opcionB, String opcionC, String opcionD, String vimagen, 
-                    int idTipoRespuestaA, int idTipoRespuestaB, int idTipoRespuestaC, int idTipoRespuestaD) {
+    public Pregunta(int id, String texto, List<Respuesta> respuestas, byte[] imagen, int idTipoRespuestaA, int idTipoRespuestaB, int idTipoRespuestaC, int idTipoRespuestaD) {
         this.id = id;
         this.texto = texto;
-        this.imagenPregunta = imagenPregunta;
-        this.opcionA = opcionA;
-        this.opcionB = opcionB;
-        this.opcionC = opcionC;
-        this.opcionD = opcionD;
-        this.vimagen = vimagen;
+        this.respuestas = respuestas;
+        this.imagen = imagen;
         this.idTipoRespuestaA = idTipoRespuestaA;
         this.idTipoRespuestaB = idTipoRespuestaB;
         this.idTipoRespuestaC = idTipoRespuestaC;
@@ -867,31 +1001,14 @@ class Pregunta {
     public String getTexto() {
         return texto;
     }
-    
-    public String getImagenPregunta() {
-        return imagenPregunta;
+
+    public List<Respuesta> getRespuestas() {
+        return respuestas;
     }
 
-    public String getOpcionA() {
-        return opcionA;
+    public byte[] getImagenPregunta() {
+        return imagen;
     }
-
-    public String getOpcionB() {
-        return opcionB;
-    }
-
-    public String getOpcionC() {
-        return opcionC;
-    }
-
-    public String getOpcionD() {
-        return opcionD;
-    }
-
-    public String getVImagen() {
-        return vimagen;
-    }
-
     public int getIdTipoRespuestaA() {
         return idTipoRespuestaA;
     }
@@ -909,6 +1026,25 @@ class Pregunta {
     }
 }
 
+class Respuesta {
+    private String texto;
+    private byte[] imagen; // Imagen en formato byte[]
+
+    // Constructor para respuestas con texto
+    public Respuesta(String texto, byte[] imagen) {
+        this.texto = texto;
+        this.imagen = imagen;
+    }
+
+    // Métodos getter
+    public String getTexto() {
+        return texto;
+    }
+
+    public byte[] getImagen() {
+        return imagen;
+    }
+}
 
 class reproducirSonido{
     private Clip clip;

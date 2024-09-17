@@ -13,6 +13,9 @@ import java.awt.Image;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -26,30 +29,37 @@ import javax.swing.JPanel;
 public class imagenespreguntas extends javax.swing.JFrame {
 
     private int mouseX, mouseY;
-    private String rutaImagen;
+    private Image imagen;
 
-    public imagenespreguntas(String ruta) {
-        this.rutaImagen = ruta;
+    public imagenespreguntas(byte[] imagenBytes) {
+        this.imagen = convertirBytesAImagen(imagenBytes);
         configureFrame();
     }
 
+    // Método para convertir el byte[] a Image
+    private Image convertirBytesAImagen(byte[] imagenBytes) {
+        try {
+            ByteArrayInputStream bais = new ByteArrayInputStream(imagenBytes);
+            BufferedImage bufferedImage = ImageIO.read(bais);
+            return bufferedImage;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     private void configureFrame() {
-        // Configurar el JFrame sin decoraciones
         setUndecorated(true);
-        // Hacer el JFrame transparente
         setBackground(new Color(0, 0, 0, 0));
 
-        // Crear un panel principal que contenga la imagen y el botón
         JPanel panelPrincipal = new JPanel(new BorderLayout());
         panelPrincipal.setOpaque(false);
         add(panelPrincipal);
 
-        // Crear un panel superior para contener el botón de cierre
         JPanel panelSuperior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         panelSuperior.setOpaque(false);
         panelPrincipal.add(panelSuperior, BorderLayout.NORTH);
 
-        // Crear el botón de cierre
         JButton btnCerrar = new JButton("X");
         btnCerrar.setPreferredSize(new Dimension(40, 40));
         btnCerrar.setBackground(Color.RED);
@@ -57,37 +67,35 @@ public class imagenespreguntas extends javax.swing.JFrame {
         btnCerrar.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         btnCerrar.setFocusPainted(false);
 
-        // Acción del botón para cerrar la ventana
         btnCerrar.addActionListener(e -> dispose());
         panelSuperior.add(btnCerrar);
 
-        // Crear un panel que sea transparente para mostrar la imagen
+        // Crear el panel que dibuja la imagen
         JPanel panelImagen = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                // Limpiar el panel
-                g.clearRect(0, 0, getWidth(), getHeight());
-                // Cargar la imagen PNG con fondo transparente
-                ImageIcon icon = new ImageIcon(rutaImagen); // Ruta de tu imagen
-                Image img = icon.getImage();
-                g.drawImage(img, 0, 0, this.getWidth(), this.getHeight(), null);
+                if (imagen != null) {
+                    g.drawImage(imagen, 0, 0, this.getWidth(), this.getHeight(), null);
+                }
             }
         };
-        // Hacer el panel completamente transparente
         panelImagen.setOpaque(false);
         panelPrincipal.add(panelImagen, BorderLayout.CENTER);
 
-        // Configurar el tamaño y ubicación del JFrame
-        setSize(400, 300); // Tamaño ajustable según tu imagen
-        setLocationRelativeTo(null); // Centrar la ventana
+        // Ajustar el tamaño del JFrame al tamaño de la imagen
+        if (imagen != null) {
+            setSize(imagen.getWidth(null), imagen.getHeight(null));
+        } else {
+            setSize(400, 300); // Tamaño por defecto si no hay imagen
+        }
+        
+        setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        // Agregar listeners para mover la ventana
         panelImagen.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                // Almacenar la posición del mouse cuando se presiona
                 mouseX = e.getX();
                 mouseY = e.getY();
             }
@@ -96,7 +104,6 @@ public class imagenespreguntas extends javax.swing.JFrame {
         panelImagen.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                // Mover el JFrame según el desplazamiento del mouse
                 int x = e.getXOnScreen() - mouseX;
                 int y = e.getYOnScreen() - mouseY;
                 setLocation(x, y);

@@ -52,6 +52,13 @@
         <Property name="useNullLayout" type="boolean" value="false"/>
       </Layout>
       <SubComponents>
+        <Component class="javax.swing.JLabel" name="labelAlerta">
+          <Constraints>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+              <AbsoluteConstraints x="0" y="0" width="1540" height="800"/>
+            </Constraint>
+          </Constraints>
+        </Component>
         <Container class="javax.swing.JPanel" name="panelClasificacion">
           <Properties>
             <Property name="opaque" type="boolean" value="false"/>
@@ -66,6 +73,27 @@
             <Property name="useNullLayout" type="boolean" value="false"/>
           </Layout>
           <SubComponents>
+            <Component class="botones.boton" name="btnsiguiente">
+              <Properties>
+                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                  <Color blue="33" green="33" red="ff" type="rgb"/>
+                </Property>
+                <Property name="text" type="java.lang.String" value="Siguiente pregunta"/>
+                <Property name="toolTipText" type="java.lang.String" value=""/>
+                <Property name="focusable" type="boolean" value="false"/>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Questions" size="36" style="1"/>
+                </Property>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnsiguienteActionPerformed"/>
+              </Events>
+              <Constraints>
+                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
+                  <AbsoluteConstraints x="1200" y="730" width="310" height="60"/>
+                </Constraint>
+              </Constraints>
+            </Component>
             <Component class="rojerusan.RSLabelImage" name="rSLabelImage11">
               <Properties>
                 <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
@@ -96,27 +124,10 @@
                 </Constraint>
               </Constraints>
             </Component>
-            <Component class="botones.boton" name="btnsiguiente">
-              <Properties>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="33" green="33" red="ff" type="rgb"/>
-                </Property>
-                <Property name="text" type="java.lang.String" value="Siguiente pregunta"/>
-                <Property name="toolTipText" type="java.lang.String" value=""/>
-                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                  <Font name="Questions" size="36" style="1"/>
-                </Property>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnsiguienteActionPerformed"/>
-              </Events>
-              <Constraints>
-                <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                  <AbsoluteConstraints x="1200" y="730" width="310" height="60"/>
-                </Constraint>
-              </Constraints>
-            </Component>
             <Component class="javax.swing.JLabel" name="imgpar4">
+              <Properties>
+                <Property name="horizontalAlignment" type="int" value="0"/>
+              </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
                   <AbsoluteConstraints x="610" y="690" width="350" height="80"/>
@@ -394,13 +405,6 @@
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
               <AbsoluteConstraints x="1250" y="760" width="150" height="-1"/>
-            </Constraint>
-          </Constraints>
-        </Component>
-        <Component class="javax.swing.JLabel" name="labelAlerta">
-          <Constraints>
-            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-              <AbsoluteConstraints x="0" y="0" width="1540" height="800"/>
             </Constraint>
           </Constraints>
         </Component>

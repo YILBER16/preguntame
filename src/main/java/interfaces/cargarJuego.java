@@ -199,6 +199,7 @@ public class cargarJuego extends javax.swing.JFrame {
             int confirmacion = JOptionPane.showConfirmDialog(null, "¿Está seguro de que desea cargar este torneo?", 
                                                              "Confirmar cagué", JOptionPane.YES_NO_OPTION);
             
+            
             juegoencurso objetoJuegoEnCurso = new juegoencurso(idFila);
             this.setVisible(false);  // Oculta el formlogin actual
             // Solo eliminar si el usuario confirma
