@@ -60,6 +60,7 @@ public class juegologica {
     private String nombreTorneo;
     private int nPreguntasTorneo;
     private int npreguntaRespondidas, idasignatura, idgrado;
+    boolean hayEmpate = false;
     public void botonPresionar(String mensaje) {
         // Aquí puedes procesar el mensaje como quieras
         System.out.println("Mensaje recibido en logicaJuego: " + mensaje);
@@ -351,13 +352,79 @@ public class juegologica {
                     indicePreguntaActual++;
                     panelClasificacion.setVisible(false);
                 }else {
-                    JOptionPane.showMessageDialog(null, "Torneo terminado.");
+                     if (hayEmpate) {
+                        // Llamar a la pregunta extra en caso de empate
+                        mostrarPreguntaExtra(idTorneo);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Torneo terminado.");
+                    }
                 }
             } else {
                 JOptionPane.showMessageDialog(null, "No hay más preguntas disponibles.");
             }
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, "Error al contar las preguntas respondidas: " + e.getMessage());
+        }
+    }
+
+    public void mostrarPreguntaExtra(int idTorneo) {
+        if (indicePreguntaActual < listaPreguntas.size()) {
+            Pregunta preguntaActual = listaPreguntas.get(indicePreguntaActual);
+
+            // Limpiar los JLabel y otros componentes
+            labelpreguntas.setText("");
+            lblimgpregunta.setIcon(null);
+            labelopciona.setIcon(null);
+            labelopcionb.setIcon(null);
+            labelopcionc.setIcon(null);
+            labelopciond.setIcon(null);
+            labelopciona.setText("");
+            labelopcionb.setText("");
+            labelopcionc.setText("");
+            labelopciond.setText("");
+
+            // Asegurarse de que no haya listeners de mouse anteriores
+            for (MouseListener ml : lblimgpregunta.getMouseListeners()) {
+                lblimgpregunta.removeMouseListener(ml);
+            }
+
+            // Mostrar la pregunta
+            labelpreguntas.setText(preguntaActual.getTexto());
+            ajustarTextoTitulo(labelpreguntas, preguntaActual.getTexto());
+
+            // Cargar y mostrar la imagen de la pregunta si existe
+            byte[] imagenPregunta = preguntaActual.getImagenPregunta();
+            mostrarImagen(lblimgpregunta, imagenPregunta, "/interfaces/logo.png");
+
+            // Configurar el listener para la imagen de la pregunta
+            lblimgpregunta.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    // Crear una instancia de imagenespreguntas con el byte[] de la imagen
+                    byte[] imagenPregunta = preguntaActual.getImagenPregunta();
+                    imagenespreguntas ventanaImagen = new imagenespreguntas(imagenPregunta);
+                    ventanaImagen.setVisible(true); // Mostrar la ventana
+                }
+            });
+
+            // Mostrar las opciones según si son imágenes o texto
+            List<Respuesta> respuestas = preguntaActual.getRespuestas();
+            mostrarOpcion(labelopciona, respuestas.size() > 0 ? respuestas.get(0) : null);
+            mostrarOpcion(labelopcionb, respuestas.size() > 1 ? respuestas.get(1) : null);
+            mostrarOpcion(labelopcionc, respuestas.size() > 2 ? respuestas.get(2) : null);
+            mostrarOpcion(labelopciond, respuestas.size() > 3 ? respuestas.get(3) : null);
+            labelopciona.putClientProperty("idtiporespuesta", preguntaActual.getIdTipoRespuestaA());
+            labelopcionb.putClientProperty("idtiporespuesta", preguntaActual.getIdTipoRespuestaB());
+            labelopcionc.putClientProperty("idtiporespuesta", preguntaActual.getIdTipoRespuestaC());
+            labelopciond.putClientProperty("idtiporespuesta", preguntaActual.getIdTipoRespuestaD());
+
+            nactual.setText("" + (npreguntaRespondidas + 1));
+            npreguntaRespondidas++;
+            // Incrementar el índice para la próxima pregunta
+            indicePreguntaActual++;
+            panelClasificacion.setVisible(false);
+        } else {
+            JOptionPane.showMessageDialog(null, "No hay más preguntas de desempate disponibles.");
         }
     }
 
@@ -695,6 +762,8 @@ public class juegologica {
                      "WHERE tp.idtorneo = ? " +
                      "ORDER BY tp.puntaje DESC";
         String color = "000000";
+        double puntaje1 = -1, puntaje2 = -1; // Para almacenar los puntajes del primer y segundo lugar
+        
         try (Connection conexion = new conexionbd().establecerConexion();
              PreparedStatement pst = conexion.prepareStatement(sql)) {
 
@@ -708,6 +777,19 @@ public class juegologica {
                     int idParticipante = rs.getInt("idparticipante");
                     double puntaje = rs.getDouble("puntaje");
                     color = rs.getString("representacion");
+                    
+                    // Guardar puntajes del primer y segundo lugar
+                    if (puesto == 1) {
+                        puntaje1 = puntaje;
+                    } else if (puesto == 2) {
+                        puntaje2 = puntaje;
+                        // Comparar puntajes para verificar si hay empate
+                        if (puntaje1 == puntaje2) {
+                            hayEmpate = true; // Hay un empate entre el primer y segundo lugar
+                        }else{
+                            hayEmpate = false;
+                        }
+                    }
 
                     if (idTipoParticipante == 2) { // Si es un equipo
                         String sqlEquipo = "SELECT e.equipo, p.foto " +
@@ -823,7 +905,7 @@ public class juegologica {
 
                     puesto++;
                 }
-
+                // Si hay empate, habilitar el botón para hacer otra pregunta
                 while (puesto <= 4) {
                     JLabel labelTexto;
                     JLabel labelImagen;
@@ -862,9 +944,24 @@ public class juegologica {
                 }
                 if(nPreguntasTorneo == npreguntaRespondidas){
                     reproductor = new reproducirSonido();
-                    reproductor.cargarSonido("/sonidos/victoria.wav");
-                    reproductor.reproducir();
-                    btnsiguiente.setVisible(false);
+                    if(hayEmpate){
+                        System.out.println("Empate: "+hayEmpate);
+                        btnsiguiente.setVisible(true);
+                    }else{
+                        reproductor.cargarSonido("/sonidos/victoria.wav");
+                        reproductor.reproducir();
+                        btnsiguiente.setVisible(false);
+                    }
+                }
+                if(npreguntaRespondidas>nPreguntasTorneo){
+                    if(hayEmpate){
+                        System.out.println("Empate: "+hayEmpate);
+                        btnsiguiente.setVisible(true);
+                    }else{
+                        reproductor.cargarSonido("/sonidos/victoria.wav");
+                        reproductor.reproducir();
+                        btnsiguiente.setVisible(false);
+                    }
                 }
                 panelClasificacion.setVisible(true);
             }
