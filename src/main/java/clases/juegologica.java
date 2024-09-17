@@ -13,6 +13,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,6 +26,8 @@ import java.util.List;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -273,11 +278,9 @@ public class juegologica {
                         rutaImagenPregunta = "src/main/resources"+preguntaActual.getImagenPregunta();
                         iconoPregunta = new ImageIcon(rutaImagenPregunta);
                     }else{
-                        rutaImagenPregunta = "src/main/resources/interfaces/logo.png";
-                        iconoPregunta = new ImageIcon(rutaImagenPregunta);
-                    }
-                    lblimgpregunta.setIcon(iconoPregunta);
-                    System.out.println("Imagen pregunta: "+preguntaActual.getImagenPregunta());
+                        iconoPregunta = new ImageIcon(getClass().getResource("/interfaces/logo.png"));                    }
+                        lblimgpregunta.setIcon(iconoPregunta);
+                        System.out.println("Imagen pregunta: "+preguntaActual.getImagenPregunta());
                      // Eliminar MouseListeners anteriores
                     for (MouseListener ml : lblimgpregunta.getMouseListeners()) {
                         lblimgpregunta.removeMouseListener(ml);
@@ -500,8 +503,9 @@ public class juegologica {
                 intentosIncorrectos = 0; // Reiniciar los intentos si la respuesta es correcta
                 double NuevoPuntaje = puntajeActual + 1.0f; 
                 actualizarPuntaje(idTorneo, idcolor, NuevoPuntaje);
-                iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage("src/main/resources/fondos/animacion_correcto.gif"));
-                reproductor.cargarSonido("src/main/resources/sonidos/soundcorrecta.wav");
+                iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage(getClass().getResource("/fondos/animacion_correcto.gif")));
+                
+                reproductor.cargarSonido("/sonidos/soundcorrecta.wav");
                 reproductor.reproducir();
                 this.botonPresionado = "0";
 
@@ -519,8 +523,8 @@ public class juegologica {
                 intentosIncorrectos++; // Incrementar los intentos incorrectos
                 double NuevoPuntaje = puntajeActual - 0.5f; 
                 actualizarPuntaje(idTorneo, idcolor, NuevoPuntaje);
-                iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage("src/main/resources/fondos/animacion_incorrecto_3.gif"));
-                reproductor.cargarSonido("src/main/resources/sonidos/soundincorrecta.wav");
+                iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage(getClass().getResource("/fondos/animacion_incorrecto_3.gif")));
+                reproductor.cargarSonido("/sonidos/soundincorrecta.wav");
                 reproductor.reproducir();
                 this.botonPresionado = "0";
                 juegoencurso.enviarComandoIncorrecto();
@@ -911,10 +915,23 @@ class reproducirSonido{
      // Método para reproducir el sonido MP3
     public void cargarSonido(String ruta) {
         try {
-            File archivoSonido = new File(ruta);
-            AudioInputStream audio = AudioSystem.getAudioInputStream(archivoSonido);
+            // Usa getResource como URL, que funciona dentro de un .jar
+            URL url = getClass().getResource(ruta);
+            if (url == null) {
+                throw new FileNotFoundException("No se encontró el recurso: " + ruta);
+            }
+
+            // Crear el AudioInputStream desde la URL
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(url);
             clip = AudioSystem.getClip();
-            clip.open(audio);
+            clip.open(audioStream);
+            System.out.println("Sonido cargado correctamente.");
+        } catch (UnsupportedAudioFileException e) {
+            System.err.println("Formato de audio no soportado: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("Error de entrada/salida: " + e.getMessage());
+        } catch (LineUnavailableException e) {
+            System.err.println("Línea de audio no disponible: " + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
         }

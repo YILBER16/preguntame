@@ -21,6 +21,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.imageio.ImageIO;
 
 /**
  *
@@ -117,13 +121,13 @@ public class torneo {
         if ((participanteSeleccionado != null || idParticipanteSeleccionado != 0) && idTipoSeleccionado != 0 && idColorSeleccionado != 0) {
             // Determinar el tipo de torneo y realizar la consulta correspondiente
             if (idTipoTorneoSeleccionado.equals("Individual")) {
-                sql = "SELECT p.id, CONCAT(p.apellidos, ' ', p.nombres) AS participante, p.imagen " +
-                      "FROM participantes p WHERE p.id = " + idParticipanteSeleccionado;
+                sql = "SELECT p.id, CONCAT(p.apellidos, ' ', p.nombres) AS participante, p.foto " +
+                      "FROM participantes p WHERE p.id = ?";
             } else if (idTipoTorneoSeleccionado.equals("Equipos")) {
-                sql = "SELECT p.id, e.equipo, p.id, p.apellidos, p.nombres, p.imagen " +
+                sql = "SELECT p.id, e.equipo, p.id, p.apellidos, p.nombres, p.foto " +
                       "FROM equipos e " +
                       "JOIN participantes p ON e.id = p.idequipo " +
-                      "WHERE e.id = " + idParticipanteSeleccionado;
+                      "WHERE e.id = ?";
             }
 
             // Conservar los datos anteriores en el modelo
@@ -132,6 +136,7 @@ public class torneo {
             Connection conexion = con.establecerConexion();
 
             try (PreparedStatement st = conexion.prepareStatement(sql)) {
+                st.setInt(1, idParticipanteSeleccionado);
                 ResultSet rs = st.executeQuery();
                 StringBuilder Color = new StringBuilder();
                 ArrayList<ImageIcon> imagenesParticipantes = new ArrayList<>();
@@ -152,8 +157,11 @@ public class torneo {
                                     .append(rs.getString(4)).append(" ")
                                     .append(rs.getString(5)).append("</font><br>");
 
-                        String rutaImagen = rs.getString(6);
-                        imagenesParticipantes.add(cargarImagenDesdeRuta("src/main/resources/" + rutaImagen, 150, 150));
+                        Blob blob = rs.getBlob(6);
+                        if (blob != null) {
+                            InputStream inputStream = blob.getBinaryStream();
+                            imagenesParticipantes.add(cargarImagenDesdeInputStream(inputStream, 150, 150));
+                        }
                         i++;
                     }
                     equipoNombre.append("</html>");
@@ -175,8 +183,11 @@ public class torneo {
                     while (rs.next()) {
                         datos[0] = rs.getString(1);  // ID del participante
                         datos[1] = rs.getString(2);  // Nombre del participante
-                        String rutaImagen = rs.getString(3);  // Ruta de la imagen
-                        imagenesParticipantes.add(cargarImagenDesdeRuta("src/main/resources/" + rutaImagen, 150, 150));
+                        Blob blob = rs.getBlob(3);  // Obtener el BLOB de la imagen
+                        if (blob != null) {
+                            InputStream inputStream = blob.getBinaryStream();
+                            imagenesParticipantes.add(cargarImagenDesdeInputStream(inputStream, 150, 150));
+                        }
                         if (!imagenesParticipantes.isEmpty()) {
                             datos[2] = concatenarImagenes(imagenesParticipantes, 150, 150);
                         }
@@ -200,6 +211,20 @@ public class torneo {
             JOptionPane.showMessageDialog(null, "Faltan datos por seleccionar");
         }
     }
+
+    private ImageIcon cargarImagenDesdeInputStream(InputStream inputStream, int ancho, int alto) {
+        try {
+            BufferedImage bufferedImage = ImageIO.read(inputStream);
+            if (bufferedImage != null) {
+                Image imagen = bufferedImage.getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
+                return new ImageIcon(imagen);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     // Método para cargar una imagen desde la ruta
     private ImageIcon cargarImagenDesdeRuta(String rutaCompleta, int ancho, int alto) {
         ImageIcon imageIcon = new ImageIcon(rutaCompleta);

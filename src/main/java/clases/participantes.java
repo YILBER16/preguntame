@@ -6,6 +6,9 @@ import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -14,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -82,22 +86,25 @@ public class participantes {
         return this.equipo; // O el nombre que deseas mostrar en el JComboBox
     }
 
-    public void insertarParticipantes(JTextField paraNombres, JTextField paraApellidos, JComboBox<participantes> paraEquipo, String rutaImagen) {
+    public void insertarParticipantes(JTextField paraNombres, JTextField paraApellidos, JComboBox<participantes> paraEquipo, byte[] imagenEnBytes) {
         if (!paraNombres.getText().isEmpty() && !paraApellidos.getText().isEmpty()) {
             setNombres(paraNombres.getText());
             setApellidos(paraApellidos.getText());
             participantes equipoSeleccionado = (participantes) paraEquipo.getSelectedItem();
             int idEquipoSeleccionado = equipoSeleccionado.getId();
             conexionbd objetoConexion = new conexionbd();
-            String consulta = "INSERT INTO participantes(nombres, apellidos, idequipo, imagen) VALUES (?, ?, ?, ?);";
+            String consulta = "INSERT INTO participantes(nombres, apellidos, idequipo, foto) VALUES (?, ?, ?, ?);";
 
             try {
                 CallableStatement cs = objetoConexion.establecerConexion().prepareCall(consulta);
                 cs.setString(1, getNombres());
                 cs.setString(2, getApellidos());
-                cs.setInt(3, idEquipoSeleccionado); // Usar el ID del equipo seleccionado
-                if(!rutaImagen.isEmpty() || rutaImagen != null || rutaImagen != ""){
-                  cs.setString(4, rutaImagen); // Guardar la ruta de la imagen
+                cs.setInt(3, idEquipoSeleccionado);
+
+                if (imagenEnBytes != null) {
+                    cs.setBytes(4, imagenEnBytes);
+                } else {
+                    cs.setNull(4, java.sql.Types.BLOB);
                 }
                 cs.execute();
 
@@ -142,7 +149,7 @@ public class participantes {
         columnModel.getColumn(3).setPreferredWidth(50);  // Ancho para la columna "Equipo"
         columnModel.getColumn(4).setPreferredWidth(200); // Ancho para la columna "Imagen"
 
-        String sql = "select p.id, p.nombres, p.apellidos, e.equipo, p.imagen from participantes p join equipos e on(p.idequipo = e.id)";
+        String sql = "SELECT p.id, p.nombres, p.apellidos, e.equipo, p.foto FROM participantes p JOIN equipos e ON p.idequipo = e.id";
         Object[] datos = new Object[5]; // Cambiado a Object[] para manejar la imagen
         Statement st;
 
@@ -156,9 +163,24 @@ public class participantes {
                 datos[2] = rs.getString(3);  // Apellidos
                 datos[3] = rs.getString(4);  // Equipo
 
-                // Obtener la ruta relativa de la imagen desde la base de datos
-                String rutaImagen = rs.getString(5);
-                datos[4] = cargarImagenDesdeRuta(rutaImagen, 100, 100); // Cargar la imagen desde la ruta y escalarla
+                // Obtener el BLOB de la imagen desde la base de datos
+                Blob blob = rs.getBlob(5);
+                ImageIcon imagenIcon = null;
+                if (blob != null) {
+                    InputStream inputStream = blob.getBinaryStream();
+                    try {
+                        BufferedImage bufferedImage = ImageIO.read(inputStream);
+                        if (bufferedImage != null) {
+                            Image imagen = bufferedImage.getScaledInstance(100, 100, Image.SCALE_SMOOTH); // Escalar imagen
+                            imagenIcon = new ImageIcon(imagen);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        inputStream.close();
+                    }
+                }
+                datos[4] = imagenIcon; // Añadir el ImageIcon a los datos
 
                 modelo.addRow(datos);
             }
@@ -167,6 +189,7 @@ public class participantes {
             JOptionPane.showMessageDialog(null, "No se pudo mostrar los registros " + e.toString());
         }
     }
+
 
 
     public void seleccionarParticipante(JTable paramTablaParticipantes, JTextField paramId, JTextField paramNombres, JTextField paramApellidos, JComboBox<participantes> paramEquipo, JLabel lblImagen) {

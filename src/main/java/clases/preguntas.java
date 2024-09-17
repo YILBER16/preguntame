@@ -3,16 +3,22 @@ package clases;
 import java.awt.Image;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import javax.imageio.ImageIO;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -78,7 +84,7 @@ public class preguntas {
         return this.asignatura; // O el nombre que deseas mostrar en el JComboBox
     }
 
-    public void insertarPregunta(TextArea paraPregunta, JComboBox<preguntas> paraAsignatura, JComboBox<preguntas> paraGrado, String rutaImagen, JLabel lblImagen) {
+    public void insertarPregunta(TextArea paraPregunta, JComboBox<preguntas> paraAsignatura, JComboBox<preguntas> paraGrado, byte[] imagenEnBytes, JLabel lblImagen) {
         preguntas asignaturaSeleccionada = (preguntas) paraAsignatura.getSelectedItem();
         int idAsignaturaSeleccionada = asignaturaSeleccionada.getId();
 
@@ -95,8 +101,10 @@ public class preguntas {
                 cs.setString(1, getPregunta());
                 cs.setInt(2, idAsignaturaSeleccionada);
                 cs.setInt(3, idGradoSeleccionado);
-                if(!rutaImagen.isEmpty() || rutaImagen != null || rutaImagen != ""){
-                  cs.setString(4, rutaImagen); // Guardar la ruta de la imagen
+                if (imagenEnBytes != null) {
+                    cs.setBytes(4, imagenEnBytes);
+                } else {
+                    cs.setNull(4, java.sql.Types.BLOB);
                 }
                 cs.execute();
 
@@ -154,8 +162,24 @@ public class preguntas {
                 datos[1] = rs.getString(2);
                 datos[2] = rs.getString(3);
                 datos[3] = rs.getString(4);
-                String rutaImagen = rs.getString(5);
-                datos[4] = cargarImagenDesdeRuta(rutaImagen, 60, 60);
+                // Obtener el BLOB de la imagen desde la base de datos
+                Blob blob = rs.getBlob(5);
+                ImageIcon imagenIcon = null;
+                if (blob != null) {
+                    InputStream inputStream = blob.getBinaryStream();
+                    try {
+                        BufferedImage bufferedImage = ImageIO.read(inputStream);
+                        if (bufferedImage != null) {
+                            Image imagen = bufferedImage.getScaledInstance(100, 100, Image.SCALE_SMOOTH); // Escalar imagen
+                            imagenIcon = new ImageIcon(imagen);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        inputStream.close();
+                    }
+                }
+                datos[4] = imagenIcon; // Añadir el ImageIcon a los datos
                 datos[5] = rutaImagen;
                 
                 datos[6] = rs.getString(6); // idasignatura
@@ -241,32 +265,22 @@ public class preguntas {
 
                         if (result == JFileChooser.APPROVE_OPTION) {
                             File selectedFile = fileChooser.getSelectedFile();
-                            String rutaAbsolutaImagen = selectedFile.getAbsolutePath();
 
-                            // Obtener la ruta de la imagen actual que ya está cargada desde la columna oculta
-                            String rutaImagenAnterior = (String) paramTablaPreguntas.getValueAt(row, 5); // Columna 5 es la ruta de imagen
-                            System.out.println(rutaImagenAnterior);
-                            // Eliminar la imagen anterior si existe
-                            if (rutaImagenAnterior != null && !rutaImagenAnterior.isEmpty()) {
-                                File imagenAnterior = new File("src/main/resources"+rutaImagenAnterior);
-                                if (imagenAnterior.exists()) {
-                                    imagenAnterior.delete(); // Eliminar la imagen anterior
-                                }
+                            try {
+                                // Convertir la imagen seleccionada a un arreglo de bytes
+                                byte[] imagenBytes = convertirImagenABytes(selectedFile);
+
+                                // Actualizar la imagen en la base de datos
+                                String idPregunta = paramTablaPreguntas.getValueAt(row, 0).toString();
+                                actualizarImagenEnBD(idPregunta, imagenBytes);
+
+                                // Mostrar la nueva imagen en la tabla
+                                ImageIcon nuevaImagen = cargarImagenDesdeBytes(imagenBytes, 100, 100);
+                                paramTablaPreguntas.setValueAt(nuevaImagen, row, col);
+
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
                             }
-
-                            // Copiar la nueva imagen a la carpeta de recursos y obtener la ruta relativa
-                            String rutaRelativa = copiarImagenARutaRelativa(rutaAbsolutaImagen);
-
-                            // Actualizar la tabla con la nueva imagen
-                            ImageIcon nuevaImagen = cargarImagenDesdeRuta(rutaRelativa, 60, 60);
-                            paramTablaPreguntas.setValueAt(nuevaImagen, row, col);
-
-                            // Actualizar la ruta de la imagen en la columna oculta
-                            paramTablaPreguntas.setValueAt(rutaRelativa, row, 5);
-
-                            // Actualizar la base de datos con la nueva ruta relativa
-                            String idPregunta = paramTablaPreguntas.getValueAt(row, 0).toString();
-                            actualizarRegistro(idPregunta, "imagen", rutaRelativa);
                         }
                     }
                 }
@@ -276,6 +290,31 @@ public class preguntas {
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "No se pudo mostrar los registros " + e.toString());
         }
+    }
+    
+    private byte[] convertirImagenABytes(File imagen) throws IOException {
+        BufferedImage bufferedImage = ImageIO.read(imagen);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(bufferedImage, "png", baos);
+        return baos.toByteArray();
+    }
+    private void actualizarImagenEnBD(String idPregunta, byte[] imagenBytes) {
+        conexionbd objetoConexion = new conexionbd();
+        String sql = "UPDATE preguntas SET imagen = ? WHERE id = ?";
+        try (PreparedStatement ps = objetoConexion.establecerConexion().prepareStatement(sql)) {
+            ps.setBytes(1, imagenBytes);
+            ps.setString(2, idPregunta);
+            ps.executeUpdate();
+            System.out.println("Imagen actualizada en la base de datos.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    private ImageIcon cargarImagenDesdeBytes(byte[] imagenBytes, int ancho, int alto) throws IOException {
+        ByteArrayInputStream bais = new ByteArrayInputStream(imagenBytes);
+        BufferedImage bufferedImage = ImageIO.read(bais);
+        Image imagen = bufferedImage.getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
+        return new ImageIcon(imagen);
     }
 
     private void actualizarCelda(JTable paramTablaPreguntas, DefaultTableModel modelo) {
@@ -347,6 +386,12 @@ public class preguntas {
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Error: " + e.toString());
         }
+    }
+    
+    public void llenarComboboxCorrecta(JComboBox<preguntas> combo) {
+        combo.addItem(new preguntas(0,0,0,"Seleccione una opción"));
+        combo.addItem(new preguntas(1,0,0,"Si"));
+        combo.addItem(new preguntas(2,0,0,"No"));
     }
     
     private void llenarComboBoxTabla(String tabla, String columna, JComboBox<String> combo) {

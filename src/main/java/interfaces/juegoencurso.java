@@ -13,7 +13,9 @@ import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sound.sampled.AudioInputStream;
@@ -21,10 +23,12 @@ import javax.sound.sampled.AudioSystem;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.sound.sampled.Clip;
-import javax.sound.sampled.FloatControl;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortException;
+
 /**
  *
  * @author YILBER
@@ -34,83 +38,80 @@ public class juegoencurso extends javax.swing.JFrame {
     Color miColorPersonalizado = new Color(0, 148, 172);
     private int idTorneo;
     private reproducirSonido reproductor;
-    private reproducirSonidoInfinito reproductorFondo;
     private PanamaHitek_Arduino ino = new PanamaHitek_Arduino();
     private juegologica juego;
     
     public juegoencurso(int idTorneo) {
         iniciarComunicacion();
         reproductor = new reproducirSonido();
-        reproductorFondo = new reproducirSonidoInfinito();
-        
-        reproductorFondo.cargarSonido("src/main/resources/sonidos/fondo.wav");
-        reproductorFondo.reproducir();
+        ReproducirSonidoInfinito reproductorFondo = new ReproducirSonidoInfinito();
         this.idTorneo = idTorneo;
         initComponents();
+        
         labelAlerta.setOpaque(false);
        // Agregar un MouseListener para simular el comportamiento de un botón
         btna.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 // Cambiar el color de fondo cuando el cursor entra
-                btna.setIcon(new ImageIcon("src/main/resources/botones/buttonbase2.png")); // Color personalizado
+                btna.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase2.png"))); // Color personalizado
                 btna.setCursor(new Cursor(Cursor.HAND_CURSOR)); // Cambiar cursor a mano
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 // Restaurar el color de fondo cuando el cursor sale
-                btna.setIcon(new ImageIcon("src/main/resources/botones/buttonbase.png"));
+                btna.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
             }
         });
         btnb.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 // Cambiar el color de fondo cuando el cursor entra
-                btnb.setIcon(new ImageIcon("src/main/resources/botones/buttonbase3.png")); // Color personalizado
+                btnb.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase3.png"))); // Color personalizado
                 btnb.setCursor(new Cursor(Cursor.HAND_CURSOR)); // Cambiar cursor a mano
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 // Restaurar el color de fondo cuando el cursor sale
-                btnb.setIcon(new ImageIcon("src/main/resources/botones/buttonbase.png"));
+                btnb.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
             }
         });
         btnc.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 // Cambiar el color de fondo cuando el cursor entra
-                btnc.setIcon(new ImageIcon("src/main/resources/botones/buttonbase4.png")); // Color personalizado
+                btnc.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase4.png"))); // Color personalizado
                 btnc.setCursor(new Cursor(Cursor.HAND_CURSOR)); // Cambiar cursor a mano
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 // Restaurar el color de fondo cuando el cursor sale
-                btnc.setIcon(new ImageIcon("src/main/resources/botones/buttonbase.png"));
+                btnc.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
             }
         });
         btnd.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 // Cambiar el color de fondo cuando el cursor entra
-                btnd.setIcon(new ImageIcon("src/main/resources/botones/buttonbase5.png")); // Color personalizado
+                btnd.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase5.png"))); // Color personalizado
                 btnd.setCursor(new Cursor(Cursor.HAND_CURSOR)); // Cambiar cursor a mano
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 // Restaurar el color de fondo cuando el cursor sale
-                btnd.setIcon(new ImageIcon("src/main/resources/botones/buttonbase.png"));
+                btnd.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
                 labelopciond.setForeground(Color.BLACK);
             }
         });
         labelopciona.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
-                reproductor.cargarSonido("src/main/resources/sonidos/hover.wav");
+                reproductor.cargarSonido("/sonidos/hover.wav");
                 reproductor.reproducir();
-                btna.setIcon(new ImageIcon("src/main/resources/botones/buttonbase2.png")); // Color personalizado
+                btna.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase2.png"))); // Color personalizado
                 btna.setCursor(new Cursor(Cursor.HAND_CURSOR));
                 labelopciona.setCursor(new Cursor(Cursor.HAND_CURSOR));
             }
@@ -118,15 +119,15 @@ public class juegoencurso extends javax.swing.JFrame {
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 // Restaurar el color de fondo cuando el cursor sale
-                btna.setIcon(new ImageIcon("src/main/resources/botones/buttonbase.png"));
+                btna.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
             }
         });
         labelopcionb.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 // Cambiar el color de fondo cuando el cursor entra
-                reproductor.cargarSonido("src/main/resources/sonidos/hover.wav");
+                reproductor.cargarSonido("/sonidos/hover.wav");
                 reproductor.reproducir();
-                btnb.setIcon(new ImageIcon("src/main/resources/botones/buttonbase3.png")); // Color personalizado
+                btnb.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase3.png"))); // Color personalizado
                 btnb.setCursor(new Cursor(Cursor.HAND_CURSOR));
                 labelopcionb.setCursor(new Cursor(Cursor.HAND_CURSOR));
             }
@@ -134,15 +135,15 @@ public class juegoencurso extends javax.swing.JFrame {
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 // Restaurar el color de fondo cuando el cursor sale
-                btnb.setIcon(new ImageIcon("src/main/resources/botones/buttonbase.png"));
+                btnb.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
             }
         });
         labelopcionc.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 // Cambiar el color de fondo cuando el cursor entra
-                reproductor.cargarSonido("src/main/resources/sonidos/hover.wav");
+                reproductor.cargarSonido("/sonidos/hover.wav");
                 reproductor.reproducir();
-                btnc.setIcon(new ImageIcon("src/main/resources/botones/buttonbase4.png")); // Color personalizado
+                btnc.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase4.png"))); // Color personalizado
                 btnc.setCursor(new Cursor(Cursor.HAND_CURSOR));
                 labelopcionc.setCursor(new Cursor(Cursor.HAND_CURSOR));
             }
@@ -150,15 +151,15 @@ public class juegoencurso extends javax.swing.JFrame {
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 // Restaurar el color de fondo cuando el cursor sale
-                btnc.setIcon(new ImageIcon("src/main/resources/botones/buttonbase.png"));
+                btnc.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
             }
         });
         labelopciond.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 // Cambiar el color de fondo cuando el cursor entra
-                reproductor.cargarSonido("src/main/resources/sonidos/hover.wav");
+                reproductor.cargarSonido("/sonidos/hover.wav");
                 reproductor.reproducir();
-                btnd.setIcon(new ImageIcon("src/main/resources/botones/buttonbase5.png")); // Color personalizado
+                btnd.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase5.png"))); // Color personalizado
                 btnd.setCursor(new Cursor(Cursor.HAND_CURSOR));
                 labelopciond.setCursor(new Cursor(Cursor.HAND_CURSOR));
             }
@@ -166,7 +167,7 @@ public class juegoencurso extends javax.swing.JFrame {
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 // Restaurar el color de fondo cuando el cursor sale
-                btnd.setIcon(new ImageIcon("src/main/resources/botones/buttonbase.png"));
+                btnd.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase.png")));
             }
         });
         btnsiguiente.addActionListener(new ActionListener() {
@@ -181,11 +182,15 @@ public class juegoencurso extends javax.swing.JFrame {
         });
         
         juego = new juegologica(labelpreguntas, labelopciona, labelopcionb, labelopcionc, labelopciond, btnsiguiente, labelAlerta, lblimgpregunta, idTorneo, this, grupoA, grupoB, grupoC, grupoD, panelClasificacion, nparticipantes1, nparticipantes2, nparticipantes3, nparticipantes4, imgpar1, imgpar2, imgpar3, imgpar4, npuntos1, npuntos2, npuntos3, npuntos4, n1, n2, n3, n4, txtTitulo, nactual, nglobal);
-        vVolumen.addChangeListener(e -> {
-            int valorSlider = vVolumen.getValue();
-            float volumen = valorSlider / 100f; // Convertir de 0-100 a 0.0-1.0
-            reproductorFondo.ajustarVolumen(volumen);
-        });
+
+        reproductorFondo.cargarSonido("/sonidos/fondo.wav");
+        reproductorFondo.reproducir();
+        
+//        vVolumen.addChangeListener(e -> {
+//            int valorSlider = vVolumen.getValue();
+//            float volumen = valorSlider / 100f; // Convertir de 0-100 a 0.0-1.0
+//            reproductorFondo.ajustarVolumen(volumen);
+//        });
     }
 
     @SuppressWarnings("unchecked")
@@ -631,22 +636,23 @@ public class juegoencurso extends javax.swing.JFrame {
                         ImageIcon iconoGif = null;
                         // Verificar si la respuesta es correcta (idtiporespuesta = 1)
                         if (mensaje.equals("1")) {
-                            iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage("src/main/resources/alertas/alerta-azul.gif"));
-                            reproductor.cargarSonido("src/main/resources/sonidos/soundnotificacion.wav");
+                            iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage(getClass().getResource("/alertas/alerta-azul.gif")));
+                            btnd.setIcon(new ImageIcon(getClass().getResource("/botones/buttonbase5.png")));
+                            reproductor.cargarSonido("/sonidos/soundnotificacion.wav");
                             reproductor.reproducir();
                         }else if (mensaje.equals("2")) {
-                            iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage("src/main/resources/alertas/alerta-verde.gif"));
-                            reproductor.cargarSonido("src/main/resources/sonidos/soundnotificacion.wav");
+                            iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage(getClass().getResource("/alertas/alerta-verde.gif")));
+                            reproductor.cargarSonido("/sonidos/soundnotificacion.wav");
                             reproductor.reproducir();
                             
                         }else if (mensaje.equals("3")) {
-                            iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage("src/main/resources/alertas/alerta-amarillo.gif"));
-                            reproductor.cargarSonido("src/main/resources/sonidos/soundnotificacion.wav");
+                            iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage(getClass().getResource("/alertas/alerta-amarillo.gif")));
+                            reproductor.cargarSonido("/sonidos/soundnotificacion.wav");
                             reproductor.reproducir();
                             
                         }else if (mensaje.equals("4")) {
-                            iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage("src/main/resources/alertas/alerta-rojo.gif"));
-                            reproductor.cargarSonido("src/main/resources/sonidos/soundnotificacion.wav");
+                            iconoGif = new ImageIcon(Toolkit.getDefaultToolkit().createImage(getClass().getResource("/alertas/alerta-rojo.gif")));
+                            reproductor.cargarSonido("/sonidos/soundnotificacion.wav");
                             reproductor.reproducir();
                         }
                         // Asignar el nuevo GIF al JLabel
@@ -688,12 +694,10 @@ public class juegoencurso extends javax.swing.JFrame {
         }
     }
     
-    public static void main(String args[]) {
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                //new juegoencurso(20).setVisible(true); 
-            }
-        });
+    public class Main {
+        public static void main(String[] args) {
+            
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -769,10 +773,23 @@ class reproducirSonido{
      // Método para reproducir el sonido MP3
     public void cargarSonido(String ruta) {
         try {
-            File archivoSonido = new File(ruta);
-            AudioInputStream audio = AudioSystem.getAudioInputStream(archivoSonido);
+            // Usa getResource como URL, que funciona dentro de un .jar
+            URL url = getClass().getResource(ruta);
+            if (url == null) {
+                throw new FileNotFoundException("No se encontró el recurso: " + ruta);
+            }
+
+            // Crear el AudioInputStream desde la URL
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(url);
             clip = AudioSystem.getClip();
-            clip.open(audio);
+            clip.open(audioStream);
+            System.out.println("Sonido cargado correctamente.");
+        } catch (UnsupportedAudioFileException e) {
+            System.err.println("Formato de audio no soportado: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("Error de entrada/salida: " + e.getMessage());
+        } catch (LineUnavailableException e) {
+            System.err.println("Línea de audio no disponible: " + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -790,30 +807,39 @@ class reproducirSonido{
         }
     }
 }
-class reproducirSonidoInfinito {
+class ReproducirSonidoInfinito {
     private Clip clip;
-    private FloatControl controlVolumen;
-
-    // Método para cargar el sonido
     public void cargarSonido(String ruta) {
         try {
-            File archivoSonido = new File(ruta);
-            AudioInputStream audio = AudioSystem.getAudioInputStream(archivoSonido);
-            clip = AudioSystem.getClip();
-            clip.open(audio);
+            // Usa getResource como URL, que funciona dentro de un .jar
+            URL url = getClass().getResource(ruta);
+            if (url == null) {
+                throw new FileNotFoundException("No se encontró el recurso: " + ruta);
+            }
 
-            // Obtener el control de volumen
-            controlVolumen = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+            // Crear el AudioInputStream desde la URL
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(url);
+            clip = AudioSystem.getClip();
+            clip.open(audioStream);
+            System.out.println("Sonido cargado correctamente.");
+        } catch (UnsupportedAudioFileException e) {
+            System.err.println("Formato de audio no soportado: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("Error de entrada/salida: " + e.getMessage());
+        } catch (LineUnavailableException e) {
+            System.err.println("Línea de audio no disponible: " + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
     // Método para reproducir el sonido infinitamente
     public void reproducir() {
         if (clip != null) {
             clip.setFramePosition(0);
             clip.loop(Clip.LOOP_CONTINUOUSLY); // Repetir infinitamente
+            System.out.println("Reproduciendo sonido.");
+        } else {
+            System.err.println("Clip no inicializado.");
         }
     }
 
@@ -821,19 +847,8 @@ class reproducirSonidoInfinito {
     public void detener() {
         if (clip != null && clip.isRunning()) {
             clip.stop();
+            System.out.println("Sonido detenido.");
         }
     }
 
-    // Método para ajustar el volumen (nivel entre 0.0 y 1.0)
-    public void ajustarVolumen(float nivel) {
-        if (controlVolumen != null) {
-            float min = controlVolumen.getMinimum();  // Valor mínimo (generalmente negativo)
-            float max = controlVolumen.getMaximum();  // Valor máximo (cerca de 0)
-
-            // Mapear el valor del slider (0.0 - 1.0) a un rango logarítmico más suave
-            float nuevoNivel = min + (max - min) * (float) Math.pow(nivel, 2);  // Suaviza la curva de volumen
-
-            controlVolumen.setValue(nuevoNivel);
-        }
-    }
 }

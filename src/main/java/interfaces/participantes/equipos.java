@@ -269,10 +269,10 @@ public class equipos extends javax.swing.JFrame {
 
     private void btnguardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnguardarActionPerformed
         participantes objetoParticipantes = new participantes();
-         byte[] imagenEnBytes = getImagen(Ruta);
-        // Construir la ruta relativa
-        String rutaRelativa = "/preguntas/" + new File(Ruta).getName();
-        objetoParticipantes.insertarParticipantes(txtnombres, txtapellidos, idequipo, rutaRelativa);
+        byte[] imagenEnBytes = getImagen(Ruta); // Obtener imagen en bytes
+
+        // Pasar datos incluyendo los bytes de la imagen
+        objetoParticipantes.insertarParticipantes(txtnombres, txtapellidos, idequipo, imagenEnBytes);
         objetoParticipantes.mostrarParticipantes(tablaparticipantes);
     }//GEN-LAST:event_btnguardarActionPerformed
 
@@ -285,35 +285,24 @@ public class equipos extends javax.swing.JFrame {
             File imagenArchivo = fileChooser.getSelectedFile();
             Ruta = imagenArchivo.getAbsolutePath();
 
-            // Definir la ruta relativa
-            String rutaRelativa = "src/main/resources/fotos/" + imagenArchivo.getName();
-            File destino = new File(rutaRelativa);
+            // Cargar la imagen y mostrarla en el JLabel
+            ImageIcon imageIcon = new ImageIcon(Ruta);
+            Image imagen = imageIcon.getImage(); // Convertir a Image
+            Image imagenEscalada = imagen.getScaledInstance(lblImagen.getWidth(), lblImagen.getHeight(), Image.SCALE_SMOOTH); // Escalar la imagen
+            imageIcon = new ImageIcon(imagenEscalada); // Convertir a ImageIcon
 
-            try {
-                // Copiar el archivo al directorio de destino
-                Files.copy(imagenArchivo.toPath(), destino.toPath(), StandardCopyOption.REPLACE_EXISTING);
-
-                // Cargar la imagen y mostrarla en el JLabel
-                ImageIcon imageIcon = new ImageIcon(destino.getAbsolutePath());
-                Image imagen = imageIcon.getImage(); // Convertir a Image
-                Image imagenEscalada = imagen.getScaledInstance(lblImagen.getWidth(), lblImagen.getHeight(), Image.SCALE_SMOOTH); // Escalar la imagen
-                imageIcon = new ImageIcon(imagenEscalada); // Convertir a ImageIcon
-
-                lblImagen.setIcon(imageIcon); // Establecer el icono en el JLabel
-            } catch (IOException ex) {
-                Logger.getLogger(equipos.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            lblImagen.setIcon(imageIcon); // Establecer el icono en el JLabel
         }
     }//GEN-LAST:event_btnexaminarActionPerformed
 
-    private byte[] getImagen(String Ruta) {
-        File imagen = new File(Ruta);
-        try {
+    private byte[] getImagen(String ruta) {
+        File imagen = new File(ruta);
+        try (InputStream input = new FileInputStream(imagen)) {
             byte[] icono = new byte[(int) imagen.length()];
-            InputStream input = new FileInputStream(imagen);
             input.read(icono);
             return icono;
         } catch (Exception ex) {
+            ex.printStackTrace();
             return null;
         }
     }

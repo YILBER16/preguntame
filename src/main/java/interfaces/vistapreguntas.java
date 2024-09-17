@@ -49,7 +49,8 @@ public class vistapreguntas extends javax.swing.JFrame {
     private Color borderColor;
     private int radius = 0;
     private static vistapreguntas instancia;
-    String Ruta = "";
+    String Ruta;
+    String rutaRespuesta;
     
     public vistapreguntas() {
         initComponents();
@@ -57,7 +58,7 @@ public class vistapreguntas extends javax.swing.JFrame {
         objetoAsignaturas.mostrarPreguntas(tablapreguntas);
         objetoAsignaturas.llenarCombobox("asignaturas", idasignatura, "asignatura");
         objetoAsignaturas.llenarCombobox("grados", idgrado, "grado");
-       
+        objetoAsignaturas.llenarComboboxCorrecta(idcorrecta);
         tablapreguntas.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 18));
         tablapreguntas.getTableHeader().setOpaque(false);
         tablapreguntas.getTableHeader().setBackground(new Color(32,136,203));
@@ -94,16 +95,21 @@ public class vistapreguntas extends javax.swing.JFrame {
         idasignatura = new combo_suggestion.ComboBoxSuggestion();
         ASIGNATURA = new javax.swing.JLabel();
         Imagen = new javax.swing.JLabel();
-        idgrado = new combo_suggestion.ComboBoxSuggestion();
-        btnexaminar = new botones.boton();
         ASIGNATURA2 = new javax.swing.JLabel();
-        lblImagen = new rojerusan.RSLabelImage();
+        lblimgPregunta = new rojerusan.RSLabelImage();
+        imgrespuesta = new botones.boton();
+        idgrado = new combo_suggestion.ComboBoxSuggestion();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tablarespuestas = new javax.swing.JTable();
-        btnsaverespuesta = new botones.boton();
-        btnadd = new botones.boton();
         btndeleterespuesta = new botones.boton();
+        inputRespuesta = new javax.swing.JTextField();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        lblrespuesta = new rojerusan.RSLabelImage();
+        btnexaminarrespuesta = new botones.boton();
+        idcorrecta = new combo_suggestion.ComboBoxSuggestion();
+        btnGuardar = new botones.boton();
         jPanel4 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tablapreguntas = new javax.swing.JTable();
@@ -166,21 +172,21 @@ public class vistapreguntas extends javax.swing.JFrame {
         Imagen.setText("Imagen");
         jPanel1.add(Imagen, new org.netbeans.lib.awtextra.AbsoluteConstraints(1050, 60, 70, -1));
 
-        idgrado.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
-        jPanel1.add(idgrado, new org.netbeans.lib.awtextra.AbsoluteConstraints(640, 50, 350, 40));
-
-        btnexaminar.setText("Examinar");
-        btnexaminar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnexaminarActionPerformed(evt);
-            }
-        });
-        jPanel1.add(btnexaminar, new org.netbeans.lib.awtextra.AbsoluteConstraints(1020, 140, 130, -1));
-
         ASIGNATURA2.setFont(new java.awt.Font("Questions", 1, 24)); // NOI18N
         ASIGNATURA2.setText("grado");
         jPanel1.add(ASIGNATURA2, new org.netbeans.lib.awtextra.AbsoluteConstraints(560, 60, 50, -1));
-        jPanel1.add(lblImagen, new org.netbeans.lib.awtextra.AbsoluteConstraints(1200, 40, 260, 200));
+        jPanel1.add(lblimgPregunta, new org.netbeans.lib.awtextra.AbsoluteConstraints(1220, 40, 250, 200));
+
+        imgrespuesta.setText("Examinar");
+        imgrespuesta.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                imgrespuestaActionPerformed(evt);
+            }
+        });
+        jPanel1.add(imgrespuesta, new org.netbeans.lib.awtextra.AbsoluteConstraints(1020, 130, 130, -1));
+
+        idgrado.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+        jPanel1.add(idgrado, new org.netbeans.lib.awtextra.AbsoluteConstraints(620, 50, 410, 36));
 
         jPanel3.add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 1510, 270));
         jPanel1.getAccessibleContext().setAccessibleDescription("");
@@ -211,29 +217,6 @@ public class vistapreguntas extends javax.swing.JFrame {
         });
         jScrollPane1.setViewportView(tablarespuestas);
 
-        btnsaverespuesta.setBackground(new java.awt.Color(0, 153, 0));
-        btnsaverespuesta.setForeground(new java.awt.Color(255, 255, 255));
-        btnsaverespuesta.setText("Guardar respuesta");
-        btnsaverespuesta.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                btnsaverespuestaMouseClicked(evt);
-            }
-        });
-        btnsaverespuesta.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnsaverespuestaActionPerformed(evt);
-            }
-        });
-
-        btnadd.setBackground(new java.awt.Color(0, 102, 255));
-        btnadd.setForeground(new java.awt.Color(255, 255, 255));
-        btnadd.setText("Añadir fila");
-        btnadd.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnaddActionPerformed(evt);
-            }
-        });
-
         btndeleterespuesta.setBackground(new java.awt.Color(255, 0, 0));
         btndeleterespuesta.setForeground(new java.awt.Color(255, 255, 255));
         btndeleterespuesta.setText("Eliminar respuesta");
@@ -243,29 +226,87 @@ public class vistapreguntas extends javax.swing.JFrame {
             }
         });
 
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 3, 18)); // NOI18N
+        jLabel2.setText("Respuesta");
+
+        jLabel3.setFont(new java.awt.Font("Segoe UI", 3, 18)); // NOI18N
+        jLabel3.setText("Correcta");
+
+        btnexaminarrespuesta.setText("Examinar");
+        btnexaminarrespuesta.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnexaminarrespuestaActionPerformed(evt);
+            }
+        });
+
+        idcorrecta.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
+
+        btnGuardar.setBackground(new java.awt.Color(0, 204, 51));
+        btnGuardar.setForeground(new java.awt.Color(255, 255, 255));
+        btnGuardar.setText("Guardar respuesta");
+        btnGuardar.setToolTipText("");
+        btnGuardar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnGuardarActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 730, Short.MAX_VALUE)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGap(3, 3, 3)
-                .addComponent(btnadd, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnsaverespuesta, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btndeleterespuesta, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jScrollPane1))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGap(17, 17, 17)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(inputRespuesta, javax.swing.GroupLayout.PREFERRED_SIZE, 289, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                        .addComponent(idcorrecta, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 47, Short.MAX_VALUE)
+                                        .addComponent(btnexaminarrespuesta, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addComponent(btnGuardar, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btndeleterespuesta, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(18, 18, 18)
+                        .addComponent(lblrespuesta, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(11, 11, 11)))
+                .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnsaverespuesta, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnadd, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btndeleterespuesta, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 422, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel2)
+                            .addComponent(jLabel3))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(inputRespuesta, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnexaminarrespuesta, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(idcorrecta, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(btndeleterespuesta, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnGuardar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(9, 9, 9))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(lblrespuesta, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 336, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(168, 168, 168))
         );
 
         jPanel3.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(770, 290, 740, 510));
@@ -335,32 +376,16 @@ public class vistapreguntas extends javax.swing.JFrame {
     private void btnguardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnguardarActionPerformed
         preguntas objetoPreguntas = new preguntas();
         byte[] imagenEnBytes = getImagen(Ruta);
-        // Construir la ruta relativa
-        String rutaRelativa = "";
-        if (Ruta != null && !Ruta.isEmpty()) {
-          rutaRelativa = "/preguntas/" + new File(Ruta).getName();
-        }
-        objetoPreguntas.insertarPregunta(txtpregunta, idasignatura, idgrado, rutaRelativa, lblImagen);
+
+        objetoPreguntas.insertarPregunta(txtpregunta, idasignatura, idgrado, imagenEnBytes, lblimgPregunta);
         objetoPreguntas.mostrarPreguntas(tablapreguntas);
-        Ruta = "";
     }//GEN-LAST:event_btnguardarActionPerformed
 
     private void tablapreguntasMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tablapreguntasMouseClicked
        respuestas objetoRespuestas = new respuestas();
        objetoRespuestas.seleccionarPregunta(tablapreguntas, tablarespuestas);
+       
     }//GEN-LAST:event_tablapreguntasMouseClicked
-
-    private void btnsaverespuestaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnsaverespuestaMouseClicked
-        respuestas objetoRespuestas = new respuestas();
-       objetoRespuestas.guardarNuevasRespuestas(tablarespuestas, tablapreguntas);
-    }//GEN-LAST:event_btnsaverespuestaMouseClicked
-
-    private void btnaddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnaddActionPerformed
-        // Obtener el modelo de la tabla
-        DefaultTableModel modelo = (DefaultTableModel) tablarespuestas.getModel();
-        // Agregar una nueva fila vacía
-        modelo.addRow(new Object[]{null, "", ""});
-    }//GEN-LAST:event_btnaddActionPerformed
 
     private void btndeleterespuestaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btndeleterespuestaActionPerformed
         // Obtener el modelo de la tabla
@@ -388,7 +413,7 @@ public class vistapreguntas extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btndeleterespuestaActionPerformed
 
-    private void btnexaminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnexaminarActionPerformed
+    private void imgrespuestaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_imgrespuestaActionPerformed
         JFileChooser fileChooser = new JFileChooser();
         FileNameExtensionFilter extensionFilter = new FileNameExtensionFilter("JPG, PNG & GIF", "jpg", "png", "gif");
         fileChooser.setFileFilter(extensionFilter);
@@ -397,33 +422,55 @@ public class vistapreguntas extends javax.swing.JFrame {
             File imagenArchivo = fileChooser.getSelectedFile();
             Ruta = imagenArchivo.getAbsolutePath();
 
-            // Definir la ruta relativa
-            String rutaRelativa = "src/main/resources/preguntas/" + imagenArchivo.getName();
-            File destino = new File(rutaRelativa);
+            // Cargar la imagen y mostrarla en el JLabel
+            ImageIcon imageIcon = new ImageIcon(Ruta);
+            Image imagen = imageIcon.getImage(); // Convertir a Image
+            Image imagenEscalada = imagen.getScaledInstance(lblimgPregunta.getWidth(), lblimgPregunta.getHeight(), Image.SCALE_SMOOTH); // Escalar la imagen
+            imageIcon = new ImageIcon(imagenEscalada); // Convertir a ImageIcon
 
-            try {
-                // Copiar el archivo al directorio de destino
-                Files.copy(imagenArchivo.toPath(), destino.toPath(), StandardCopyOption.REPLACE_EXISTING);
-
-                // Cargar la imagen y mostrarla en el JLabel
-                ImageIcon imageIcon = new ImageIcon(destino.getAbsolutePath());
-                Image imagen = imageIcon.getImage(); // Convertir a Image
-                Image imagenEscalada = imagen.getScaledInstance(lblImagen.getWidth(), lblImagen.getHeight(), Image.SCALE_SMOOTH); // Escalar la imagen
-                imageIcon = new ImageIcon(imagenEscalada); // Convertir a ImageIcon
-
-                lblImagen.setIcon(imageIcon); // Establecer el icono en el JLabel
-            } catch (IOException ex) {
-                Logger.getLogger(vistapreguntas.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            lblimgPregunta.setIcon(imageIcon); // Establecer el icono en el JLabel
         }
-    }//GEN-LAST:event_btnexaminarActionPerformed
+    }//GEN-LAST:event_imgrespuestaActionPerformed
 
-    private void btnsaverespuestaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnsaverespuestaActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnsaverespuestaActionPerformed
+    private void btnexaminarrespuestaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnexaminarrespuestaActionPerformed
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter extensionFilter = new FileNameExtensionFilter("JPG, PNG & GIF", "jpg", "png", "gif");
+        fileChooser.setFileFilter(extensionFilter);
 
-    private byte[] getImagen(String Ruta) {
-        File imagen = new File(Ruta);
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File imagenArchivo = fileChooser.getSelectedFile();
+            rutaRespuesta = imagenArchivo.getAbsolutePath();
+
+            // Cargar la imagen y mostrarla en el JLabel
+            ImageIcon imageIcon = new ImageIcon(rutaRespuesta);
+            Image imagen = imageIcon.getImage(); // Convertir a Image
+            Image imagenEscalada = imagen.getScaledInstance(lblrespuesta.getWidth(), lblrespuesta.getHeight(), Image.SCALE_SMOOTH); // Escalar la imagen
+            imageIcon = new ImageIcon(imagenEscalada); // Convertir a ImageIcon
+
+            lblrespuesta.setIcon(imageIcon); // Establecer el icono en el JLabel
+        }
+    }//GEN-LAST:event_btnexaminarrespuestaActionPerformed
+
+    private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
+         respuestas objetoRespuestas = new respuestas();
+
+        // Obtener la imagen en bytes, solo si la ruta no es nula ni vacía
+        byte[] imagenEnBytes2 = null;
+        if (rutaRespuesta != null && !rutaRespuesta.trim().isEmpty()) {
+            imagenEnBytes2 = getImagen(rutaRespuesta);
+        }
+
+        // Llamar al método para guardar respuestas
+        objetoRespuestas.guardarRespuestas(tablapreguntas, inputRespuesta, idcorrecta, imagenEnBytes2, lblrespuesta);
+        DefaultTableModel modelo = (DefaultTableModel) tablapreguntas.getModel();
+        int filaSeleccionada = tablapreguntas.getSelectedRow();
+        // Obtener el ID de la pregunta desde la tabla
+        String idFilaObj = (String) tablapreguntas.getValueAt(filaSeleccionada, 0);
+        objetoRespuestas.cargarRespuestas(idFilaObj, tablarespuestas, tablapreguntas);
+    }//GEN-LAST:event_btnGuardarActionPerformed
+
+      private byte[] getImagen(String RutaImagen) {
+        File imagen = new File(RutaImagen);
         try {
             byte[] icono = new byte[(int) imagen.length()];
             InputStream input = new FileInputStream(imagen);
@@ -480,21 +527,26 @@ public class vistapreguntas extends javax.swing.JFrame {
     private javax.swing.JLabel ASIGNATURA2;
     private javax.swing.JLabel Imagen;
     private botones.boton btnEliminar;
-    private botones.boton btnadd;
+    private botones.boton btnGuardar;
     private botones.boton btndeleterespuesta;
-    private botones.boton btnexaminar;
+    private botones.boton btnexaminarrespuesta;
     private botones.boton btnguardar;
-    private botones.boton btnsaverespuesta;
     private combo_suggestion.ComboBoxSuggestion idasignatura;
+    private combo_suggestion.ComboBoxSuggestion idcorrecta;
     private combo_suggestion.ComboBoxSuggestion idgrado;
+    private botones.boton imgrespuesta;
+    private javax.swing.JTextField inputRespuesta;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
-    private rojerusan.RSLabelImage lblImagen;
+    private rojerusan.RSLabelImage lblimgPregunta;
+    private rojerusan.RSLabelImage lblrespuesta;
     private javax.swing.JTable tablapreguntas;
     private javax.swing.JTable tablarespuestas;
     private textarea.TextAreaScroll textAreaScroll1;
@@ -566,4 +618,5 @@ public class vistapreguntas extends javax.swing.JFrame {
         instancia.setVisible(true);
         return instancia;
     }
+    
 }

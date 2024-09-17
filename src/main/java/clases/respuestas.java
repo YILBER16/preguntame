@@ -18,19 +18,29 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import clases.TipoRespuestas;
+import interfaces.vistapreguntas;
 import java.awt.Image;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.sql.Blob;
+import java.sql.CallableStatement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
@@ -107,8 +117,8 @@ public class respuestas {
     }
     
     // Método para cargar la tabla con las respuestas y el JComboBox dinámico
-    private void cargarRespuestas(String idPregunta, JTable tablaRespuestas, JTable tablaPreguntas) {
-        String sql = "SELECT r.id, r.respuesta, r.idtiporespuesta, tr.tipo, r.imagen " +
+    public void cargarRespuestas(String idPregunta, JTable tablaRespuestas, JTable tablaPreguntas) {
+        String sql = "SELECT r.id, r.respuesta, r.idtiporespuesta, tr.tipo, r.imagen2 " +
                      "FROM respuestas r " +
                      "JOIN tiporespuesta tr ON r.idtiporespuesta = tr.id " +
                      "WHERE idpregunta = ?";
@@ -134,17 +144,30 @@ public class respuestas {
             st.setString(1, idPregunta);
             ResultSet rs = st.executeQuery();
             Object[] datos = new Object[5];
+
             // Agrega filas al modelo
             while (rs.next()) {
                 datos[0] = rs.getString(1);
                 datos[1] = rs.getString(2);
                 datos[2] = rs.getString(4);
-                String rutaImagen = rs.getString(5);
-                datos[3] = cargarImagenDesdeRuta(rutaImagen, 60, 60);
-                datos[4] = rutaImagen;
+
+                // Obtener el BLOB de la imagen
+                Blob blob = rs.getBlob(5);
+                ImageIcon imagenIcono = null;
+                if (blob != null) {
+                    InputStream inputStream = blob.getBinaryStream();
+                    BufferedImage bufferedImage = ImageIO.read(inputStream);
+                    if (bufferedImage != null) {
+                        imagenIcono = new ImageIcon(bufferedImage.getScaledInstance(60, 60, Image.SCALE_SMOOTH));
+                    }
+                }
+                datos[3] = imagenIcono;
+                datos[4] = ""; // Ruta de la imagen no es necesaria si estás manejando BLOB
+
                 modelo.addRow(datos);
             }
             tablaRespuestas.setModel(modelo);
+
             // Crear y cargar el JComboBox después de haber asignado el modelo
             JComboBox<TipoRespuestas> comboBoxTipoRespuesta = new JComboBox<>();
             cargarComboBoxTipoRespuesta(comboBoxTipoRespuesta); // Método que llena el JComboBox
@@ -157,25 +180,25 @@ public class respuestas {
             tablaRespuestas.getColumnModel().getColumn(0).setMinWidth(0);
             tablaRespuestas.getColumnModel().getColumn(0).setMaxWidth(0);
             tablaRespuestas.getColumnModel().getColumn(0).setPreferredWidth(0);
-            
+
             tablaRespuestas.getColumnModel().getColumn(4).setMinWidth(0);
             tablaRespuestas.getColumnModel().getColumn(4).setMaxWidth(0);
             tablaRespuestas.getColumnModel().getColumn(4).setWidth(0);
             tablaRespuestas.getColumnModel().getColumn(4).setPreferredWidth(0);
 
             // Permitir al usuario agregar nuevas respuestas en la tabla
-            modelo.addRow(new Object[] {null, "", ""}); // Fila vacía para nueva respuesta
+            modelo.addRow(new Object[] {null, "", "", null, ""}); // Fila vacía para nueva respuesta
 
-              // Aquí es donde colocas el código para configurar la tabla con el listener
+            // Configurar la tabla con el listener
             DefaultTableModel modeloTablaRespuestas = (DefaultTableModel) tablaRespuestas.getModel();
             configurarTablaRespuestasConActualizaciones(tablaRespuestas, modeloTablaRespuestas, tablaPreguntas);
-            
+
             tablaRespuestas.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     int row = tablaRespuestas.rowAtPoint(e.getPoint());
                     int col = tablaRespuestas.columnAtPoint(e.getPoint());
-                    
+
                     if (col == 3 && e.getClickCount() == 1) { // Doble clic en la columna de imagen
                         JFileChooser fileChooser = new JFileChooser();
                         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -186,41 +209,60 @@ public class respuestas {
                             File selectedFile = fileChooser.getSelectedFile();
                             String rutaAbsolutaImagen = selectedFile.getAbsolutePath();
 
-                            // Obtener la ruta de la imagen actual que ya está cargada desde la columna oculta
-                            String rutaImagenAnterior = (String) tablaRespuestas.getValueAt(row, 4); // Columna 5 es la ruta de imagen
-                            System.out.println(rutaImagenAnterior);
-                            // Eliminar la imagen anterior si existe
-                            if (rutaImagenAnterior != null && !rutaImagenAnterior.isEmpty()) {
-                                File imagenAnterior = new File("src/main/resources"+rutaImagenAnterior);
-                                if (imagenAnterior.exists()) {
-                                    imagenAnterior.delete(); // Eliminar la imagen anterior
-                                }
+                            // Obtener el nuevo BLOB de la imagen
+                            try (InputStream inputStream = new FileInputStream(selectedFile)) {
+                                BufferedImage bufferedImage = ImageIO.read(inputStream);
+                                ImageIcon nuevaImagen = new ImageIcon(bufferedImage.getScaledInstance(60, 60, Image.SCALE_SMOOTH));
+
+                                // Actualizar la tabla con la nueva imagen
+                                tablaRespuestas.setValueAt(nuevaImagen, row, col);
+
+                                // Actualizar la base de datos con la nueva imagen
+                                String idRespuesta = tablaRespuestas.getValueAt(row, 0).toString();
+                                actualizarRegistroRespuestas(idRespuesta, "imagen2", new FileInputStream(selectedFile));
+
+                            } catch (IOException ex) {
+                                JOptionPane.showMessageDialog(null, "Error al leer la imagen: " + ex.toString());
                             }
-
-                            // Copiar la nueva imagen a la carpeta de recursos y obtener la ruta relativa
-                            String rutaRelativa = copiarImagenARutaRelativa(rutaAbsolutaImagen);
-
-                            // Actualizar la tabla con la nueva imagen
-                            ImageIcon nuevaImagen = cargarImagenDesdeRuta(rutaRelativa, 60, 60);
-                            tablaRespuestas.setValueAt(nuevaImagen, row, col);
-
-                            // Actualizar la ruta de la imagen en la columna oculta
-                            tablaRespuestas.setValueAt(rutaRelativa, row, 4);
-
-                            // Actualizar la base de datos con la nueva ruta relativa
-                            String idRespuesta = tablaRespuestas.getValueAt(row, 0).toString();
-                            actualizarRegistroRespuestas(idRespuesta, "imagen", rutaRelativa);
                         }
                     }
                 }
             });
-            
+
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, "Error al cargar respuestas: " + e.toString());
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Error inesperado: " + e.toString());
         }
     }
+
+    
+    private void actualizarRegistroRespuestas(String idRespuesta, String columna, InputStream imagenStream) {
+        String sql = "UPDATE respuestas SET " + columna + " = ? WHERE id = ?";
+
+        try (Connection conexion = new conexionbd().establecerConexion();
+             PreparedStatement st = conexion.prepareStatement(sql)) {
+
+            // Configura el parámetro del BLOB
+            st.setBlob(1, imagenStream);
+            // Configura el ID de la respuesta
+            st.setString(2, idRespuesta);
+
+            // Ejecuta la actualización
+            int filasAfectadas = st.executeUpdate();
+            if (filasAfectadas > 0) {
+                System.out.println("Imagen actualizada correctamente.");
+            } else {
+                System.out.println("No se encontró el registro con ID: " + idRespuesta);
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error al actualizar la imagen: " + e.toString());
+        }
+    }
+
+
+
 
     private Map<String, Integer> tipoRespuestaMap = new HashMap<>();
 
@@ -251,119 +293,109 @@ public class respuestas {
         return null;
     }  
     
-    public void guardarNuevasRespuestas(JTable tablaRespuestas, JTable tablaPreguntas) {
-        DefaultTableModel modelo = (DefaultTableModel) tablaRespuestas.getModel();
+    public void guardarRespuestas(JTable tablaPreguntas, JTextField respuesta, JComboBox<preguntas> correcta, byte[] imagenEnBytes, JLabel lblimgrespuesta) {
+        DefaultTableModel modelo = (DefaultTableModel) tablaPreguntas.getModel();
         int filaSeleccionada = tablaPreguntas.getSelectedRow();
-
+        // Verificar si se seleccionó una fila
         if (filaSeleccionada < 0) {
             JOptionPane.showMessageDialog(null, "No se ha seleccionado ninguna fila.");
             return;
         }
 
-        String idPregunta = tablaPreguntas.getValueAt(filaSeleccionada, 0).toString();
-        System.out.println("ID de la pregunta: " + idPregunta);
-
-        if (idPregunta == null || idPregunta.trim().isEmpty()) {
+        // Obtener el ID de la pregunta desde la tabla
+        Object idFilaObj = tablaPreguntas.getValueAt(filaSeleccionada, 0);
+        if (idFilaObj == null || idFilaObj.toString().trim().isEmpty()) {
             JOptionPane.showMessageDialog(null, "ID de la pregunta no válido.");
             return;
         }
+        String idFila = idFilaObj.toString();
 
-        String selectSql = "SELECT COUNT(*) FROM respuestas WHERE idpregunta = ? AND respuesta = ?";
-        String insertSql = "INSERT INTO respuestas (idpregunta, respuesta, idtiporespuesta, imagen) VALUES (?, ?, ?, ?)";
-        String sqlNRespuestasCorrectas = "SELECT COUNT(r.id) AS nrespuestascorrectas " +
-                                         "FROM preguntas p JOIN respuestas r ON (r.idpregunta = p.id) " +
-                                         "WHERE p.id = " + idPregunta + " AND r.idtiporespuesta = 1";
+        // Verificar si 'respuesta' no es null antes de obtener su texto
+        String respuestaText = (respuesta != null) ? respuesta.getText().trim() : "";
+        if (respuestaText == null) {
+            respuestaText = "";
+        }
 
-        conexionbd objetoConexion = new conexionbd();
-        int filasGuardadas = 0; // Variable para contar el número de filas guardadas
+        // Verificar si 'correcta' no es null y obtener la opción correcta seleccionada
+        preguntas correctaSeleccionada = (correcta != null) ? (preguntas) correcta.getSelectedItem() : null;
+        int idCorrectaSeleccionada = (correctaSeleccionada != null) ? correctaSeleccionada.getId() : 0;
 
-        try {
-            Connection conexion = objetoConexion.establecerConexion();
-            PreparedStatement selectStmt = conexion.prepareStatement(selectSql);
-            PreparedStatement selectsqlNRespuestasCorrectas = conexion.prepareStatement(sqlNRespuestasCorrectas);
-            PreparedStatement insertStmt = conexion.prepareStatement(insertSql);
+        // Verificar si 'imagenEnBytes' no es null y tiene longitud
+        boolean imagenCompleta = (imagenEnBytes != null && imagenEnBytes.length > 0);
 
-            // Ejecutar la consulta para contar respuestas correctas existentes
-            ResultSet rsNRespuestasCorrectas = selectsqlNRespuestasCorrectas.executeQuery();
-            int nRespuestasCorrectasExistentes = 0;
-            if (rsNRespuestasCorrectas.next()) {
-                nRespuestasCorrectasExistentes = rsNRespuestasCorrectas.getInt(1);
-            }
+        // Validar que se tenga texto o imagen, pero no ambos ni ninguno
+        boolean textoCompleto = !respuestaText.isEmpty();
+        if ((textoCompleto && imagenCompleta) || (!textoCompleto && !imagenCompleta)) {
+            JOptionPane.showMessageDialog(null, "Debe ingresar texto o cargar una imagen, pero no ambos ni ninguno.");
+            return;
+        }
 
-            // Contar cuántas respuestas correctas se están intentando guardar
-            int nRespuestasCorrectasEnTabla = 0;
-            for (int i = 0; i < modelo.getRowCount(); i++) {
-                Object tipoRespuestaObj = modelo.getValueAt(i, 2);
+        // Verificar si ya existe una respuesta correcta para la misma pregunta
+        String sqlVerificarRespuestaCorrecta = "SELECT COUNT(*) FROM respuestas WHERE idpregunta = ? AND idtiporespuesta = 1";
+        String sqlInsertarRespuesta = "INSERT INTO respuestas (idpregunta, respuesta, idtiporespuesta, imagen2) VALUES (?, ?, ?, ?)";
 
-                TipoRespuestas tipoRespuestaSeleccionado = null;
+        try (Connection conexion = new conexionbd().establecerConexion();
+             PreparedStatement psVerificar = conexion.prepareStatement(sqlVerificarRespuestaCorrecta);
+             PreparedStatement psInsertar = conexion.prepareStatement(sqlInsertarRespuesta)) {
 
-                // Convertir el valor de la columna a TipoRespuestas
-                if (tipoRespuestaObj instanceof TipoRespuestas) {
-                    tipoRespuestaSeleccionado = (TipoRespuestas) tipoRespuestaObj;
-                } else if (tipoRespuestaObj instanceof String) {
-                    tipoRespuestaSeleccionado = obtenerTipoRespuestasPorNombre((String) tipoRespuestaObj);
-                }
-
-                if (tipoRespuestaSeleccionado != null && tipoRespuestaSeleccionado.getId() == 1) {
-                    nRespuestasCorrectasEnTabla++;
-                }
-            }
-
-            // Validar que no haya más de una respuesta correcta
-            if (nRespuestasCorrectasExistentes + nRespuestasCorrectasEnTabla > 1) {
-                JOptionPane.showMessageDialog(null, "No es posible guardar múltiples respuestas correctas para la misma pregunta.");
-                return;
-            }
-
-            // Guardar las respuestas si la validación fue exitosa
-            for (int i = 0; i < modelo.getRowCount(); i++) {
-                String idRespuesta = (String) modelo.getValueAt(i, 0);
-                String respuesta = (String) modelo.getValueAt(i, 1);
-                Object tipoRespuestaObj = modelo.getValueAt(i, 2);
-                String ruta = (String) modelo.getValueAt(i, 4);
-                TipoRespuestas tipoRespuestaSeleccionado = null;
-
-                // Convertir el valor de la columna a TipoRespuestas
-                if (tipoRespuestaObj instanceof TipoRespuestas) {
-                    tipoRespuestaSeleccionado = (TipoRespuestas) tipoRespuestaObj;
-                } else if (tipoRespuestaObj instanceof String) {
-                    tipoRespuestaSeleccionado = obtenerTipoRespuestasPorNombre((String) tipoRespuestaObj);
-                }
-
-                Integer tipoRespuestaId = tipoRespuestaSeleccionado != null ? tipoRespuestaSeleccionado.getId() : null;
-
-                if (idRespuesta == null) {
-                    idRespuesta = ""; // Asegúrate de que idRespuesta no sea null
-                }
-
-                if (!respuesta.trim().isEmpty() && tipoRespuestaId != null) {
-                    if (idRespuesta.trim().isEmpty()) {
-                        // Nueva respuesta
-                        insertStmt.setString(1, idPregunta);
-                        insertStmt.setString(2, respuesta);
-                        insertStmt.setInt(3, tipoRespuestaId);
-                        insertStmt.setString(4, ruta);
-                        int filasAfectadas = insertStmt.executeUpdate();
-                        if (filasAfectadas > 0) {
-                            filasGuardadas++; // Incrementa el contador si se insertó una fila
-                        }
-                    } else {
-                        // Respuesta existente, opcionalmente podrías actualizarla si es necesario
+            // Verificar respuestas correctas existentes
+            psVerificar.setString(1, idFila);
+            try (ResultSet rs = psVerificar.executeQuery()) {
+                if (rs.next()) {
+                    int numeroRespuestasCorrectas = rs.getInt(1);
+                    // Validar que no haya más de una respuesta correcta
+                    if (numeroRespuestasCorrectas >= 1 && idCorrectaSeleccionada == 1) {
+                        JOptionPane.showMessageDialog(null, "Ya existe una respuesta correcta para esta pregunta.");
+                        return;
                     }
                 }
             }
 
-            if (filasGuardadas > 0) {
-                cargarRespuestas(idPregunta, tablaRespuestas, tablaPreguntas);
-                JOptionPane.showMessageDialog(null, "Respuestas guardadas correctamente.");
+            // Configurar los parámetros del PreparedStatement para la inserción
+            psInsertar.setString(1, idFila);
+            psInsertar.setString(2, respuestaText);
+            psInsertar.setInt(3, idCorrectaSeleccionada);
+            if (imagenCompleta) {
+                psInsertar.setBytes(4, imagenEnBytes);
             } else {
-                JOptionPane.showMessageDialog(null, "No se guardaron nuevas respuestas.");
+                psInsertar.setNull(4, java.sql.Types.BLOB);
             }
 
+            // Ejecutar la consulta de inserción
+            psInsertar.executeUpdate();
+
+            // Limpiar los campos y actualizar la interfaz de usuario
+            if (respuesta != null) {
+                respuesta.setText("");
+            }
+            if (correcta != null) {
+                correcta.setSelectedIndex(0);
+            }
+            if (lblimgrespuesta != null) {
+                lblimgrespuesta.setIcon(null);
+            }
+            JOptionPane.showMessageDialog(null, "Se insertó correctamente la respuesta");
+
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Error al guardar respuestas: " + e.toString());
+            JOptionPane.showMessageDialog(null, "Error en la inserción, error: " + e.toString());
         }
     }
+
+   
+    private byte[] convertirImagenABytes(File imagen) {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            BufferedImage bufferedImage = ImageIO.read(imagen);
+
+            // Convertir la imagen a un formato adecuado, como JPG o PNG
+            ImageIO.write(bufferedImage, "jpg", baos);
+            return baos.toByteArray();
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Error al convertir la imagen: " + e.getMessage());
+            return null;
+        }
+    }
+
  
     public void eliminarRespuestaDesdeBaseDeDatos(String idRespuesta) {
             String sql = "DELETE FROM respuestas WHERE id = ?";
